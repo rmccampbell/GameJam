@@ -2,7 +2,7 @@
 import sys, os, pygame, pygame.freetype, random
 from pygame.locals import *
 
-FPS = 60
+FPS = 70
 
 BGCOLOR = (255, 255, 255)
 
@@ -15,11 +15,15 @@ RIGHT = 2
 
 DIR_CHARS = ['<', '^', '>']
 DIR_COLORS = [(0, 255, 255), (255, 0, 255), (255, 255, 0)]
-HIT_COLORS = [(159, 255, 255), (255, 159, 255), (255, 255, 159)]
-MISS_COLORS = [(0, 191, 191), (191, 0, 191), (191, 191, 0)]
+#HIT_COLORS = [(159, 255, 255), (255, 159, 255), (255, 255, 159)]
+#MISS_COLORS = [(0, 191, 191), (191, 0, 191), (191, 191, 0)]
 
 ATTRIB_COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
 SELECT_COLORS = [(240, 220, 220), (220, 240, 220), (220, 220, 240)]
+
+MUSIC_SPEED = 2
+MUSIC_RATE = 60
+POINT_RATE = 30
 
 
 class Beat:
@@ -33,18 +37,17 @@ class Beat:
         self.side = player.side
         self.dist = 0
         self.is_ready = False
-        self.is_hit = False
         self.is_missed = False
         self.delete = False
 
     def update(self):
-        self.dist += 1
-        if self.dist == 320:
+        self.dist += MUSIC_SPEED
+        if self.dist >= 320 and not self.is_ready:
             self.is_ready = True
             self.player.ready_beats[self.track] = self
-        elif self.dist == 340:
-            self.check()
+        elif self.dist >= 340 and self.is_ready:
             self.is_ready = False
+            self.check()
             self.player.ready_beats[self.track] = None
         if self.dist >= 410:
             self.delete = True
@@ -54,7 +57,7 @@ class Beat:
 
     def check(self):
         hit = self.hits == self.dirs
-        self.is_hit = hit
+        self.delete = hit
         self.is_missed = not hit
         if not hit or any(self.dirs):
             self.player.active_tracks[self.track] = hit
@@ -64,11 +67,8 @@ class Beat:
         for dir in range(3):
             if self.dirs[dir]:
                 y = 150*self.track + 20*dir + 50
-                color = (HIT_COLORS[dir] if self.is_hit else
-                         MISS_COLORS[dir] if self.is_missed else
-                         DIR_COLORS[dir])
-                pygame.draw.circle(screen, color, (x, y), 10)
-                if -4 <= x < WIDTH+4:
+                pygame.draw.circle(screen, DIR_COLORS[dir], (x, y), 10)
+                if -3 <= x < WIDTH+3:
                     self.font.render_to(screen, (x-4, y-5), DIR_CHARS[dir])
 
 
@@ -81,21 +81,26 @@ class Player:
         self.ready_beats = [None]*3
         self.active_tracks = [False]*3
         self.timer = 0
+        self.boost_counter = 0
 
         self.power = 10
         self.health = 10
         self.speed = 10
 
     def update(self):
-        self.timer += 1
-        if self.timer >= 50:
-            self.timer = 0
+        self.timer += self.game.speed_mult
+        if self.timer >= POINT_RATE:
+            self.timer -= POINT_RATE
             if self.active_tracks[0]:
                 self.power += 1
             if self.active_tracks[1]:
                 self.health += 1
             if self.active_tracks[2]:
                 self.speed += 1
+            if any(self.active_tracks):
+                self.boost_counter += 1
+            else:
+                self.boost_counter = 0
         for beat in self.beats:
             beat.update()
         self.beats = [beat for beat in self.beats if not beat.delete]
@@ -122,11 +127,13 @@ class Player:
         for beat in self.beats:
             beat.draw(screen)
         self.font.render_to(screen, (left + 25, 10),
-                            'Power: %02d' % self.power, ATTRIB_COLORS[0])
+                            'Power: %d' % self.power, ATTRIB_COLORS[0])
         self.font.render_to(screen, (left + 165, 10),
-                            'Health: %02d' % self.health, ATTRIB_COLORS[1])
+                            'Health: %d' % self.health, ATTRIB_COLORS[1])
         self.font.render_to(screen, (left + 305, 10),
-                            'Speed: %02d' % self.speed, ATTRIB_COLORS[2])
+                            'Speed: %d' % self.speed, ATTRIB_COLORS[2])
+        self.font.render_to(screen, (left + 25, 140),
+                            'Boost: %d' % self.boost_counter)
 
 
 class Game:
@@ -138,6 +145,7 @@ class Game:
         self.player1 = Player(0, self)
         self.player2 = Player(1, self)
         self.timer = 0
+        self.speed_mult = 1
         self.running = False
 
     def run(self):
@@ -154,15 +162,21 @@ class Game:
             pygame.quit()
 
     def update(self):
-        self.timer += 1
-        if self.timer >= 100:
-            self.timer = 0
+        self.timer += self.speed_mult
+        if self.timer >= MUSIC_RATE:
+            self.timer -= MUSIC_RATE
             for track in range(3):
-                dirs = [random.random() < .5 for i in range(3)]
+                dirmask = random.randrange(7)
+                dirs = [bool(dirmask >> i & 1) for i in range(3)]
                 self.player1.beats.append(Beat(dirs, track, self.player1))
                 self.player2.beats.append(Beat(dirs, track, self.player2))
         self.player1.update()
         self.player2.update()
+        boost_counter = max(self.player1.boost_counter,
+                            self.player2.boost_counter)
+        self.speed_mult = (1 if boost_counter < 30 else
+                           2 if boost_counter < 100 else
+                           4)
 
     def draw(self, screen):
         screen.fill(BGCOLOR)
