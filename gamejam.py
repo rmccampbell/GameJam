@@ -7,64 +7,126 @@ FPS = 60
 BGCOLOR = (255, 255, 255)
 
 WIDTH = 800
-HEIGHT = 400
+HEIGHT = 450
 
 LEFT = 0
 UP = 1
 RIGHT = 2
 
-PLAYER1 = 0
-PLAYER2 = 1
-
 DIR_CHARS = ['<', '^', '>']
-DIR_COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
+DIR_COLORS = [(0, 255, 255), (255, 0, 255), (255, 255, 0)]
+HIT_COLORS = [(159, 255, 255), (255, 159, 255), (255, 255, 159)]
+MISS_COLORS = [(0, 191, 191), (191, 0, 191), (191, 191, 0)]
+
+ATTRIB_COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
+SELECT_COLORS = [(240, 220, 220), (220, 240, 220), (220, 220, 240)]
 
 
 class Beat:
-    def __init__(self, dir, track, side, game):
-        self.game = game
-        self.font = game.font
-        self.dir = dir
+    def __init__(self, dirs, track, player):
+        self.player = player
+        self.game = player.game
+        self.font = self.game.font
+        self.dirs = list(dirs)
+        self.hits = [0]*3
         self.track = track
-        self.side = side
-        self.char = DIR_CHARS[dir]
-        self.color = DIR_COLORS[dir]
+        self.side = player.side
         self.dist = 0
         self.is_ready = False
         self.is_hit = False
+        self.is_missed = False
         self.delete = False
 
     def update(self):
         self.dist += 1
         if self.dist == 320:
             self.is_ready = True
+            self.player.ready_beats[self.track] = self
         elif self.dist == 340:
-            if not self.is_hit:
-                self.is_ready = False
-                self.miss()
+            self.check()
+            self.is_ready = False
+            self.player.ready_beats[self.track] = None
         if self.dist >= 410:
             self.delete = True
 
-    def hit(self):
-        print('hit', self.side + 1, ('left', 'up', 'right')[self.dir])
-        self.is_ready = False
-        self.is_hit = True
+    def hit(self, dir):
+        self.hits[dir] += 1
 
-    def miss(self):
-        #print('miss', self.side + 1, ('left', 'up', 'right')[self.dir])
-        self.game.active_tracks[self.track] = False
-        print(self.game.active_tracks)
+    def check(self):
+        hit = self.hits == self.dirs
+        self.is_hit = hit
+        self.is_missed = not hit
+        if not hit or any(self.dirs):
+            self.player.active_tracks[self.track] = hit
 
     def draw(self, screen):
-        x = 400 + self.dist * (-1 if self.side == PLAYER1 else 1)
-        y = 150*self.track + 20*self.dir + 30
-        pygame.draw.circle(screen, self.color, (x, y), 10)
-        if -5 < x < 805:
-            self.font.render_to(screen, (x-4, y-5), self.char)
+        x = WIDTH//2 + self.dist * (-1, 1)[self.side]
+        for dir in range(3):
+            if self.dirs[dir]:
+                y = 150*self.track + 20*dir + 50
+                color = (HIT_COLORS[dir] if self.is_hit else
+                         MISS_COLORS[dir] if self.is_missed else
+                         DIR_COLORS[dir])
+                pygame.draw.circle(screen, color, (x, y), 10)
+                if -4 <= x < WIDTH+4:
+                    self.font.render_to(screen, (x-4, y-5), DIR_CHARS[dir])
 
 
 class Player:
-    pass
+    def __init__(self, side, game):
+        self.game = game
+        self.font = game.font
+        self.side = side
+        self.beats = []
+        self.ready_beats = [None]*3
+        self.active_tracks = [False]*3
+        self.timer = 0
+
+        self.power = 10
+        self.health = 10
+        self.speed = 10
+
+    def update(self):
+        self.timer += 1
+        if self.timer >= 50:
+            self.timer = 0
+            if self.active_tracks[0]:
+                self.power += 1
+            if self.active_tracks[1]:
+                self.health += 1
+            if self.active_tracks[2]:
+                self.speed += 1
+        for beat in self.beats:
+            beat.update()
+        self.beats = [beat for beat in self.beats if not beat.delete]
+
+    def hit(self, dir):
+        did_hit = False
+        for track, beat in enumerate(self.ready_beats):
+            if beat:
+                status = beat.hit(dir)
+                did_hit = True
+                if status == 0:
+                    self.active_tracks[track] = False
+                elif status == 2:
+                    self.active_tracks[track] = True
+        if not did_hit:
+            self.active_tracks = [False]*3
+
+    def draw(self, screen):
+        left = WIDTH//2 * self.side
+        for i in range(3):
+            y = i*150 + 40
+            if self.active_tracks[i]:
+                pygame.draw.rect(screen, SELECT_COLORS[i], (left, y, 400, 60))
+        for beat in self.beats:
+            beat.draw(screen)
+        self.font.render_to(screen, (left + 25, 10),
+                            'Power: %02d' % self.power, ATTRIB_COLORS[0])
+        self.font.render_to(screen, (left + 165, 10),
+                            'Health: %02d' % self.health, ATTRIB_COLORS[1])
+        self.font.render_to(screen, (left + 305, 10),
+                            'Speed: %02d' % self.speed, ATTRIB_COLORS[2])
 
 
 class Game:
@@ -73,8 +135,8 @@ class Game:
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption('GameJam')
         self.font = pygame.freetype.SysFont('Arial', 20)
-        self.active_tracks = [False]*3
-        self.beats = []
+        self.player1 = Player(0, self)
+        self.player2 = Player(1, self)
         self.timer = 0
         self.running = False
 
@@ -92,59 +154,35 @@ class Game:
             pygame.quit()
 
     def update(self):
+        self.timer += 1
         if self.timer >= 100:
             self.timer = 0
             for track in range(3):
-                dirmask = random.randrange(1, 8)
-                for dir in range(3):
-                    if dirmask & 1<<dir:
-#                        self.beats.append(Beat(dir, track, PLAYER1, self))
-                        self.beats.append(Beat(dir, track, PLAYER2, self))
-        self.timer += 1
-        for beat in self.beats:
-            beat.update()
-        self.beats = [beat for beat in self.beats if not beat.delete]
-
-    def hit(self, player, dir):
-        self.active_tracks = [False]*3
-        for beat in self.beats:
-            if (beat.side == player and
-                    beat.dir == dir and
-                    beat.is_ready):
-                beat.hit()
-                self.active_tracks[beat.track] = True
-        else:
-            self.false_hit(player)
-        print(self.active_tracks)
-
-    def false_hit(self, player):
-        pass
-        #print('false hit', player + 1)
+                dirs = [random.random() < .5 for i in range(3)]
+                self.player1.beats.append(Beat(dirs, track, self.player1))
+                self.player2.beats.append(Beat(dirs, track, self.player2))
+        self.player1.update()
+        self.player2.update()
 
     def draw(self, screen):
         screen.fill(BGCOLOR)
 
-        for i in range(3):
-            y = i*150 + 20
-            if self.active_tracks[i]:
-                pygame.draw.rect(screen, (220,220,240), (400, y, 400, 60))
-
-        for beat in self.beats:
-            beat.draw(screen)
+        self.player1.draw(screen)
+        self.player2.draw(screen)
 
         for i in range(3):
-            y = i*150 + 20
-            pygame.draw.line(screen, (0,0,0), (0, y), (800, y), 2)
-            pygame.draw.line(screen, (0,0,0), (0, y+20), (800, y+20), 2)
-            pygame.draw.line(screen, (0,0,0), (0, y+40), (800, y+40), 2)
-            pygame.draw.line(screen, (0,0,0), (0, y+60), (800, y+60), 2)
+            y = i*150 + 40
+            pygame.draw.line(screen, (0,0,0), (0, y), (WIDTH, y), 2)
+            pygame.draw.line(screen, (0,0,0), (0, y+20), (WIDTH, y+20), 2)
+            pygame.draw.line(screen, (0,0,0), (0, y+40), (WIDTH, y+40), 2)
+            pygame.draw.line(screen, (0,0,0), (0, y+60), (WIDTH, y+60), 2)
 
             pygame.draw.line(screen, (0,0,0), (80, y), (80, y+60), 2)
             pygame.draw.line(screen, (0,0,0), (60, y), (60, y+60), 2)
-            pygame.draw.line(screen, (0,0,0), (720, y), (720, y+60), 2)
-            pygame.draw.line(screen, (0,0,0), (740, y), (740, y+60), 2)
+            pygame.draw.line(screen, (0,0,0), (720, y), (WIDTH-80, y+60), 2)
+            pygame.draw.line(screen, (0,0,0), (740, y), (WIDTH-60, y+60), 2)
 
-        pygame.draw.line(screen, (0,0,0), (400, 0), (400, 400), 2)
+        pygame.draw.line(screen, (0,0,0), (WIDTH//2, 0), (WIDTH//2, HEIGHT), 2)
 
     def process_events(self):
         for e in pygame.event.get():
@@ -156,17 +194,17 @@ class Game:
                     self.quit()
 
                 elif e.key == K_a:
-                    self.hit(PLAYER1, LEFT)
+                    self.player1.hit(LEFT)
                 elif e.key == K_w:
-                    self.hit(PLAYER1, UP)
+                    self.player1.hit(UP)
                 elif e.key == K_d:
-                    self.hit(PLAYER1, RIGHT)
+                    self.player1.hit(RIGHT)
                 elif e.key == K_LEFT:
-                    self.hit(PLAYER2, LEFT)
+                    self.player2.hit(LEFT)
                 elif e.key == K_UP:
-                    self.hit(PLAYER2, UP)
+                    self.player2.hit(UP)
                 elif e.key == K_RIGHT:
-                    self.hit(PLAYER2, RIGHT)
+                    self.player2.hit(RIGHT)
 
     def quit(self):
         self.running = False
