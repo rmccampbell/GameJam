@@ -29,6 +29,7 @@ class Player:
         self.speedy = 0
         self.grounded = True
         self.rect = None
+        self.sprite = None
         self.index = None
 
 class Game:
@@ -153,11 +154,25 @@ class Game:
         pygame.draw.rect(screen, pygame.Color("black"), ground)
 
         # players
-        self.players[PLAYER1].rect = pygame.Rect((self.players[PLAYER1].x, self.players[PLAYER1].y), (SIZE, SIZE))
-        pygame.draw.rect(screen, pygame.Color("red"), self.players[PLAYER1].rect)
+        group = pygame.sprite.Group()
 
-        self.players[PLAYER2].rect = pygame.Rect((self.players[PLAYER2].x, self.players[PLAYER2].y), (SIZE, SIZE))
-        pygame.draw.rect(screen, pygame.Color("blue"), self.players[PLAYER2].rect)
+        player1 = self.players[PLAYER1]
+        player1.rect = pygame.Rect((player1.x, player1.y), (SIZE, SIZE))
+        pygame.draw.rect(screen, pygame.Color("red"), player1.rect)
+
+        player2 = self.players[PLAYER2]
+        player2.sprite = pygame.sprite.Sprite()
+        player2.sprite.image = pygame.image.load("blueidle.png").convert()
+        player2.sprite.image.set_colorkey((255, 255, 255))
+        player2.sprite.image = pygame.transform.scale(player2.sprite.image, (100, 100))
+        player2.rect = pygame.Rect((player2.x, player2.y), (SIZE, SIZE))
+        player2.sprite.rect = player2.rect
+
+        group.add(player2.sprite)
+
+        # pygame.draw.rect(screen, pygame.Color("blue"), player2.rect)
+        group.draw(screen)
+
 
         if not self.win == -1:
             if self.win == PLAYER1:
