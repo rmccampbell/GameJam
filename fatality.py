@@ -154,25 +154,35 @@ class Game:
         pygame.draw.rect(screen, pygame.Color("black"), ground)
 
         # players
+        player1 = self.players[PLAYER1]
+        player2 = self.players[PLAYER2]
         group = pygame.sprite.Group()
 
-        player1 = self.players[PLAYER1]
-        player1.rect = pygame.Rect((player1.x, player1.y), (SIZE, SIZE))
-        pygame.draw.rect(screen, pygame.Color("red"), player1.rect)
+        player1.sprite = pygame.sprite.Sprite()
+        player1.sprite.image = pygame.image.load("redidle.png").convert()
+        player1.sprite.image.set_colorkey((255, 255, 255))
+        player1.sprite.image = pygame.transform.scale(player1.sprite.image, (100, 100))
+        
+        if player1.x > player2.x:
+            player1.sprite.image = pygame.transform.flip(player1.sprite.image, True, False)
 
-        player2 = self.players[PLAYER2]
+        player1.rect = pygame.Rect((player1.x, player1.y), (SIZE, SIZE))
+        player1.sprite.rect = player1.rect
+
         player2.sprite = pygame.sprite.Sprite()
         player2.sprite.image = pygame.image.load("blueidle.png").convert()
         player2.sprite.image.set_colorkey((255, 255, 255))
         player2.sprite.image = pygame.transform.scale(player2.sprite.image, (100, 100))
+        
+        if player2.x > player1.x:
+            player2.sprite.image = pygame.transform.flip(player2.sprite.image, True, False)
+        
         player2.rect = pygame.Rect((player2.x, player2.y), (SIZE, SIZE))
         player2.sprite.rect = player2.rect
 
+        group.add(player1.sprite)
         group.add(player2.sprite)
-
-        # pygame.draw.rect(screen, pygame.Color("blue"), player2.rect)
         group.draw(screen)
-
 
         if not self.win == -1:
             if self.win == PLAYER1:
