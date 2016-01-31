@@ -8,19 +8,23 @@ BGCOLOR = (255, 255, 255)
 
 WIDTH = 800
 HEIGHT = 450
+MID = WIDTH//2
 
 LEFT = 0
 UP = 1
 RIGHT = 2
 
-DIR_CHARS = ['<', '^', '>']
+PLAYER1 = 0
+PLAYER2 = 1
+
+DIR_CHARS = [['A', 'W', 'D'], ['<', '^', '>']]
 DIR_COLORS = [(0, 255, 255), (255, 0, 255), (255, 255, 0)]
 
-ATTRIB_COLORS = [(180, 0, 0), (100, 100, 255), (223, 223, 0)]
-SELECT_COLORS = [(255, 220, 220), (220, 220, 255), (255, 255, 220)]
+ATTRIB_COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
+SELECT_COLORS = [(240, 220, 220), (220, 240, 220), (220, 220, 240)]
 
 MUSIC_SPEED = 2
-MUSIC_RATE = 60
+MUSIC_RATE = 120
 POINT_RATE = 30
 
 
@@ -57,10 +61,10 @@ class Beat:
 
     def update(self):
         self.dist += MUSIC_SPEED
-        if self.dist >= 310 and not self.is_ready:
+        if self.dist >= 340 and not self.is_ready:
             self.is_ready = True
             self.player.ready_beats[self.track] = self
-        elif self.dist >= 350 and self.is_ready:
+        elif self.dist >= 380 and self.is_ready:
             self.is_ready = False
             self.check()
             self.player.ready_beats[self.track] = None
@@ -78,13 +82,13 @@ class Beat:
             self.player.active_tracks[self.track] = hit
 
     def draw(self, screen):
-        x = WIDTH//2 + self.dist * (-1, 1)[self.side]
+        y = 50 + self.dist
         for dir in range(3):
             if self.dirs[dir]:
-                y = 150*self.track + 20*dir + 50
+                x = MID*self.side + 130*self.track + 20*dir + 50
                 pygame.draw.circle(screen, DIR_COLORS[dir], (x, y), 10)
-                if -3 <= x < WIDTH+3:
-                    self.font.render_to(screen, (x-4, y-5), DIR_CHARS[dir])
+                char = DIR_CHARS[self.side][dir]
+                self.font.render_to(screen, (x-5, y-5), char, size=18)
 
 
 class Player:
@@ -124,35 +128,32 @@ class Player:
         did_hit = False
         for track, beat in enumerate(self.ready_beats):
             if beat:
-                status = beat.hit(dir)
+                beat.hit(dir)
                 did_hit = True
-                if status == 0:
-                    self.active_tracks[track] = False
-                elif status == 2:
-                    self.active_tracks[track] = True
         if not did_hit:
             self.active_tracks = [False]*3
+            self.boost_counter = 0
 
     def draw(self, screen):
-        left = WIDTH//2 * self.side
+        left = MID*self.side
         for i in range(3):
-            y = i*150 + 40
+            x = left + i*130 + 40
             if self.active_tracks[i]:
-                pygame.draw.rect(screen, SELECT_COLORS[i], (left, y, 400, 60))
+                pygame.draw.rect(screen, SELECT_COLORS[i],
+                                 (x, 40, 60, HEIGHT-40))
         for beat in self.beats:
             beat.draw(screen)
-        x = -10 if self.side == 0 else WIDTH - 160
-        screen.blit(POWER_IMG, (x, 8))
-        screen.blit(HEALTH_IMG, (x, 158))
-        screen.blit(SPEED_IMG, (x, 308))
-        self.font.render_to(screen, (x + 120, 17),
-                            str(self.power), ATTRIB_COLORS[0])
-        self.font.render_to(screen, (x + 120, 167),
-                            str(self.health), ATTRIB_COLORS[1])
-        self.font.render_to(screen, (x + 120, 317),
-                            str(self.speed), ATTRIB_COLORS[2])
-##        self.font.render_to(screen, (x + 25, 110),
+##        self.font.render_to(screen, (left + 35, 10),
+##                            'Power: %d' % self.power, ATTRIB_COLORS[0])
+##        self.font.render_to(screen, (left + 165, 10),
+##                            'Health: %d' % self.health, ATTRIB_COLORS[1])
+##        self.font.render_to(screen, (left + 295, 10),
+##                            'Speed: %d' % self.speed, ATTRIB_COLORS[2])
+##        self.font.render_to(screen, (left + 105, 140),
 ##                            'Boost: %d' % self.boost_counter)
+        screen.blit(POWER_IMG, (left + 5, 8))
+        screen.blit(HEALTH_IMG, (left + 130, 8))
+        screen.blit(SPEED_IMG, (left + 260, 8))            
 
 
 class Game:
@@ -161,7 +162,7 @@ class Game:
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption('GameJam')
         load_images()
-        self.font = pygame.freetype.Font('BAUHS93.TTF', 24)
+        self.font = pygame.freetype.Font('bauhaus-93.ttf', 20)
         self.player1 = Player(0, self)
         self.player2 = Player(1, self)
         self.timer = 0
@@ -205,18 +206,19 @@ class Game:
         self.player2.draw(screen)
 
         for i in range(3):
-            y = i*150 + 40
-            pygame.draw.line(screen, (0,0,0), (0, y), (WIDTH, y), 2)
-            pygame.draw.line(screen, (0,0,0), (0, y+20), (WIDTH, y+20), 2)
-            pygame.draw.line(screen, (0,0,0), (0, y+40), (WIDTH, y+40), 2)
-            pygame.draw.line(screen, (0,0,0), (0, y+60), (WIDTH, y+60), 2)
+            x = i*130 + 40
+            for j in range(4):
+                xx = x + j*20
+                pygame.draw.line(screen, (0,0,0), (xx, 40), (xx, HEIGHT), 2)
+                pygame.draw.line(screen, (0,0,0), (MID+xx, 40),
+                                                  (MID+xx, HEIGHT), 2)
+            pygame.draw.line(screen, (0,0,0), (x, 400), (x+60, 400), 2)
+            pygame.draw.line(screen, (0,0,0), (x, 420), (x+60, 420), 2)
+            pygame.draw.line(screen, (0,0,0), (MID+x, 400), (MID+x+60, 400), 2)
+            pygame.draw.line(screen, (0,0,0), (MID+x, 420), (MID+x+60, 420), 2)
 
-            pygame.draw.line(screen, (0,0,0), (80, y), (80, y+60), 2)
-            pygame.draw.line(screen, (0,0,0), (60, y), (60, y+60), 2)
-            pygame.draw.line(screen, (0,0,0), (720, y), (WIDTH-80, y+60), 2)
-            pygame.draw.line(screen, (0,0,0), (740, y), (WIDTH-60, y+60), 2)
-
-        pygame.draw.line(screen, (0,0,0), (WIDTH//2, 0), (WIDTH//2, HEIGHT), 2)
+        pygame.draw.line(screen, (0,0,0), (0, 40), (WIDTH, 40), 2)
+        pygame.draw.line(screen, (0,0,0), (MID, 0), (MID, HEIGHT), 3)
 
     def process_events(self):
         for e in pygame.event.get():
@@ -227,18 +229,19 @@ class Game:
                     e.key == K_F4 and e.mod & KMOD_ALT):
                     self.quit()
 
-                elif e.key == K_q:
-                    self.player1.hit(LEFT)
                 elif e.key == K_a:
+                    self.player1.hit(LEFT)
+                elif e.key == K_w:
                     self.player1.hit(UP)
-                elif e.key == K_z:
+                elif e.key == K_d:
                     self.player1.hit(RIGHT)
-                elif e.key == K_o:
+                elif e.key == K_LEFT:
                     self.player2.hit(LEFT)
-                elif e.key == K_k:
+                elif e.key == K_UP:
                     self.player2.hit(UP)
-                elif e.key == K_m:
+                elif e.key == K_RIGHT:
                     self.player2.hit(RIGHT)
+
 
     def quit(self):
         self.running = False
