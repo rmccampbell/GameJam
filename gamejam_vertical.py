@@ -16,14 +16,12 @@ RIGHT = 2
 
 DIR_CHARS = ['<', '^', '>']
 DIR_COLORS = [(0, 255, 255), (255, 0, 255), (255, 255, 0)]
-#HIT_COLORS = [(159, 255, 255), (255, 159, 255), (255, 255, 159)]
-#MISS_COLORS = [(0, 191, 191), (191, 0, 191), (191, 191, 0)]
 
 ATTRIB_COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
 SELECT_COLORS = [(240, 220, 220), (220, 240, 220), (220, 220, 240)]
 
 MUSIC_SPEED = 2
-MUSIC_RATE = 60
+MUSIC_RATE = 120
 POINT_RATE = 30
 
 
@@ -43,10 +41,10 @@ class Beat:
 
     def update(self):
         self.dist += MUSIC_SPEED
-        if self.dist >= 350 and not self.is_ready:
+        if self.dist >= 340 and not self.is_ready:
             self.is_ready = True
             self.player.ready_beats[self.track] = self
-        elif self.dist >= 370 and self.is_ready:
+        elif self.dist >= 380 and self.is_ready:
             self.is_ready = False
             self.check()
             self.player.ready_beats[self.track] = None
@@ -190,7 +188,8 @@ class Game:
             for j in range(4):
                 xx = x + j*20
                 pygame.draw.line(screen, (0,0,0), (xx, 40), (xx, HEIGHT), 2)
-                pygame.draw.line(screen, (0,0,0), (MID+xx, 40), (MID+xx, HEIGHT), 2)
+                pygame.draw.line(screen, (0,0,0), (MID+xx, 40),
+                                                  (MID+xx, HEIGHT), 2)
             pygame.draw.line(screen, (0,0,0), (x, 400), (x+60, 400), 2)
             pygame.draw.line(screen, (0,0,0), (x, 420), (x+60, 420), 2)
             pygame.draw.line(screen, (0,0,0), (MID+x, 400), (MID+x+60, 400), 2)
