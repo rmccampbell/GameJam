@@ -220,6 +220,7 @@ class Game:
                 elif e.key == K_RIGHT:
                     self.player2.hit(RIGHT)
 
+
     def quit(self):
         self.running = False
 

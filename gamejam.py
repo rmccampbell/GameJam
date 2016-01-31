@@ -205,17 +205,17 @@ class Game:
                     e.key == K_F4 and e.mod & KMOD_ALT):
                     self.quit()
 
-                elif e.key == K_a:
+                elif e.key == K_q:
                     self.player1.hit(LEFT)
-                elif e.key == K_w:
+                elif e.key == K_a:
                     self.player1.hit(UP)
-                elif e.key == K_d:
+                elif e.key == K_z:
                     self.player1.hit(RIGHT)
-                elif e.key == K_LEFT:
+                elif e.key == K_o:
                     self.player2.hit(LEFT)
-                elif e.key == K_UP:
+                elif e.key == K_k:
                     self.player2.hit(UP)
-                elif e.key == K_RIGHT:
+                elif e.key == K_m:
                     self.player2.hit(RIGHT)
 
     def quit(self):
