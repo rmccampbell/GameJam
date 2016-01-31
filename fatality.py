@@ -148,6 +148,8 @@ class Game:
             pygame.quit()
 
     def update(self):
+        self.timer -= 1
+
         if self.timer <= 0:
             self.timer = 0
             if self.players[PLAYER1].health < self.players[PLAYER2].health:
@@ -157,13 +159,15 @@ class Game:
             else:
                 self.win = 2
 
-        if self.win == -1:
-            self.timer -= 1
-
         if self.players[PLAYER1].health <= .01:
             self.win = PLAYER2
         elif self.players[PLAYER2].health <= .01:
             self.win = PLAYER1
+
+        if not self.win == -1:
+            self.players[PLAYER1].attacking = False
+            self.players[PLAYER2].attacking = False
+            self.timer = 0
 
         for player in self.players:
             other = self.players[1 - player.index]
@@ -171,6 +175,8 @@ class Game:
             if not other.fist is None:
                 if player.rect.contains(other.fist.colliderect):
                     player.health -= .1
+                    if player.health < 0:
+                            player.health = 0
                     other.fist.sprite.kill()
                     other.fist.x += 1000
 
@@ -278,9 +284,12 @@ class Game:
 
             if fist1.dir < 0:
                 fist1.sprite.image = pygame.transform.flip(fist1.sprite.image, True, False)
+                fist1.colliderect = pygame.Rect((fist1.x + 18, fist1.y + 44), (50, 44))
+            else:
+                fist1.colliderect = pygame.Rect((fist1.x + 60, fist1.y + 44), (50, 44))
+
 
             fist1.rect = pygame.Rect((fist1.x, fist1.y), (SIZE, SIZE))
-            fist1.colliderect = pygame.Rect((fist1.x + 60, fist1.y + 44), (50, 44))
             fist1.sprite.rect = fist1.rect
 
             if player1.attack_time - self.timer > 120:
@@ -291,7 +300,7 @@ class Game:
         else:
             player1.sprite.image = REDDANCE[player1.sprite_num-1]
 
-            if (self.timer % 5 == 0 and not self.win == 1):
+            if (self.timer % 5 == 0 and not self.win == PLAYER2):
                 player1.sprite_num += 1
                 if (player1.sprite_num > 8):
                     player1.sprite_num = 1
@@ -324,9 +333,11 @@ class Game:
 
             if fist2.dir > 0:
                 fist2.sprite.image = pygame.transform.flip(fist2.sprite.image, True, False)
+                fist2.colliderect = pygame.Rect((fist2.x + 18, fist2.y + 44), (50, 44))
+            else:
+                fist2.colliderect = pygame.Rect((fist2.x + 60, fist2.y + 44), (50, 44))
 
             fist2.rect = pygame.Rect((fist2.x, fist2.y), (SIZE, SIZE))
-            fist2.colliderect = pygame.Rect((fist2.x + 60, fist2.y + 44), (50, 44))
             fist2.sprite.rect = fist2.rect
 
             if player2.attack_time - self.timer > 120:
@@ -337,7 +348,7 @@ class Game:
         else:
             player2.sprite.image = BLUEDANCE[player2.sprite_num-1]
         
-            if (self.timer % 5 == 0 and not self.win == 0):
+            if (self.timer % 5 == 0 and not self.win == PLAYER1):
                 player2.sprite_num += 1
                 if (player2.sprite_num > 8):
                     player2.sprite_num = 1
