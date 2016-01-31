@@ -32,7 +32,6 @@ def load_images():
         REDDANCE.append(img)
     for i in range(1, 9):
         img = pygame.image.load("bluedance%d.png" % i).convert_alpha()
-        img.set_colorkey((0, 0, 0))
         img = pygame.transform.scale(img, (115, 115))
         BLUEDANCE.append(img)
 
