@@ -4,7 +4,7 @@ from pygame.locals import *
 
 FPS = 60
 
-BGCOLOR = (255, 255, 255)
+BGCOLOR = (255, 200, 255)
 
 WIDTH = 800
 HEIGHT = 400
@@ -189,7 +189,7 @@ class Game:
 
         # stage
         ground = pygame.Rect((0, HEIGHT*.75), (WIDTH, HEIGHT*.75))
-        pygame.draw.rect(screen, pygame.Color("black"), ground)
+        pygame.draw.rect(screen, (75, 75, 75), ground)
 
         # players
         player1 = self.players[PLAYER1]
