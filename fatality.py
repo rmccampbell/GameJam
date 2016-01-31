@@ -214,7 +214,7 @@ class Game:
                         player.y = other.y - SPRITESIZE
                         player.speedy += -1
                         player.speedy = max(player.speedy, -1)
-                        other.health -= 10
+                        other.health -= 5
                         if other.health < 0:
                             other.health = 0
 
