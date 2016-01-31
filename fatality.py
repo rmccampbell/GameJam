@@ -18,7 +18,8 @@ RIGHT = 2
 PLAYER1 = 0
 PLAYER2 = 1
 
-SIZE = 100
+RECTSIZE = 128
+SPRITESIZE = 100
 FISTSIZE = 50
 
 LIFESPAN = 300
@@ -130,13 +131,13 @@ class Game:
         self.group = pygame.sprite.Group()
 
         self.player1 = player1 = Player()
-        player1.x = WIDTH*.25 - 50
+        player1.x = WIDTH*.25 - RECTSIZE/2
         player1.y = HEIGHT*.5
         player1.index = 0
         self.set_player_attr(player1, player1_attrs)
 
         self.player2 = player2 = Player()
-        player2.x = WIDTH*.75 - 50
+        player2.x = WIDTH*.75 - RECTSIZE/2
         player2.y = HEIGHT*.5
         player2.index = 1
         self.set_player_attr(player2, player2_attrs)
@@ -209,32 +210,32 @@ class Game:
                 player.speedy += self.gravity
 
                 if player.rect.colliderect(other):
-                    if player.y - other.y > -1 * SIZE  and player.y - other.y < 0 and abs(player.x - other.x) < SIZE - 10:
-                        player.y = other.y - SIZE
+                    if player.y - other.y > -1 * SPRITESIZE  and player.y - other.y < 0 and abs(player.x - other.x) < SPRITESIZE - 10:
+                        player.y = other.y - SPRITESIZE
                         player.speedy += -1
                         player.speedy = max(player.speedy, -1)
                         other.health -= 10
                         if other.health < 0:
                             other.health = 0
 
-                if player.y > HEIGHT * 0.75 - SIZE:
-                    player.y = HEIGHT * 0.75 - SIZE
+                if player.y > HEIGHT * 0.75 - SPRITESIZE:
+                    player.y = HEIGHT * 0.75 - SPRITESIZE
                     player.speedy = 0
                     player.grounded = True
 
             if not player.speedx == 0:
                 player.x += player.speedx * player.speed
 
-                if player.x < 0:
-                    player.x = 0
-                elif player.x > WIDTH - SIZE:
-                    player.x =  WIDTH - SIZE
+                if player.x < -1 * RECTSIZE/4:
+                    player.x = -1 * RECTSIZE/4
+                elif player.x > WIDTH - SPRITESIZE:
+                    player.x =  WIDTH - SPRITESIZE
 
-                if player.rect.colliderect(other) and player.y > other.y - SIZE:
+                if player.rect.colliderect(other) and player.y > other.y - SPRITESIZE:
                     if player.x < other.x:
-                        player.x = other.x - SIZE
+                        player.x = other.x - SPRITESIZE
                     else:
-                        player.x = other.x + SIZE
+                        player.x = other.x + SPRITESIZE
 
                 player.speedx = 0
 
@@ -327,7 +328,7 @@ class Game:
                 fist1.colliderect = pygame.Rect((fist1.x + 60, fist1.y + 44), (50, 44))
 
 
-            fist1.rect = pygame.Rect((fist1.x, fist1.y), (SIZE, SIZE))
+            fist1.rect = pygame.Rect((fist1.x, fist1.y), (SPRITESIZE, SPRITESIZE))
             fist1.sprite.rect = fist1.rect
 
             if not fist1.alive or player1.attack_time - self.timer > LIFESPAN:
@@ -346,7 +347,7 @@ class Game:
         if player1.x > player2.x:
             player1.sprite.image = pygame.transform.flip(player1.sprite.image, True, False)
 
-        player1.rect = pygame.Rect((player1.x, player1.y), (SIZE, SIZE))
+        player1.rect = pygame.Rect((player1.x, player1.y), (SPRITESIZE, SPRITESIZE))
         player1.sprite.rect = player1.rect
 
         if player2.attacking:
@@ -377,7 +378,7 @@ class Game:
             else:
                 fist2.colliderect = pygame.Rect((fist2.x + 60, fist2.y + 44), (50, 44))
 
-            fist2.rect = pygame.Rect((fist2.x, fist2.y), (SIZE, SIZE))
+            fist2.rect = pygame.Rect((fist2.x, fist2.y), (SPRITESIZE, SPRITESIZE))
             fist2.sprite.rect = fist2.rect
 
             if not fist2.alive  or player2.attack_time - self.timer > LIFESPAN:
@@ -396,7 +397,7 @@ class Game:
         if player2.x > player1.x:
             player2.sprite.image = pygame.transform.flip(player2.sprite.image, True, False)
         
-        player2.rect = pygame.Rect((player2.x, player2.y), (SIZE, SIZE))
+        player2.rect = pygame.Rect((player2.x, player2.y), (SPRITESIZE, SPRITESIZE))
         player2.sprite.rect = player2.rect
 
         self.group.draw(screen)
