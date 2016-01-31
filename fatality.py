@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+from __future__ import division
 import sys, os, pygame, pygame.freetype, random, math
 from pygame.locals import *
+
 
 FPS = 60
 
@@ -17,6 +19,9 @@ PLAYER1 = 0
 PLAYER2 = 1
 
 SIZE = 100
+FISTSIZE = 50
+
+LIFESPAN = 300
 
 REDDANCE = []
 
@@ -34,6 +39,9 @@ BLUEIDLE = None
 
 BLUENOFIST = None
 
+BASEPOWER = 1
+BASEHEALTH = 50
+BASESPEED = 5
 
 def load_images():
     global REDDANCE, BLUEDANCE
@@ -80,9 +88,8 @@ class Fist:
         self.y = 0
         self.dir = 1
         self.speed = 5
-        self.power = 5
         self.sprite_num = 1
-        self.lifespan = 120
+        self.alive = True
         self.rect = None
         self.colliderect = None
         self.sprite = pygame.sprite.Sprite()
@@ -92,8 +99,9 @@ class Player:
         self.x = 0
         self.y = 0
         self.speed = 5
-        self.jumpspeed = 4
+        self.jumpspeed = 20
         self.health = 1
+        self.max_health = BASEHEALTH
         self.power = 5
         self.speedx = 0
         self.speedy = 0
@@ -107,7 +115,7 @@ class Player:
         self.fist = None
 
 class Game:
-    def __init__(self):
+    def __init__(self, player1_attrs, player2_attrs):
         pygame.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption('GameJam')
@@ -125,14 +133,22 @@ class Game:
         player1.x = WIDTH*.25 - 50
         player1.y = HEIGHT*.5
         player1.index = 0
+        self.set_player_attr(player1, player1_attrs)
 
         self.player2 = player2 = Player()
         player2.x = WIDTH*.75 - 50
         player2.y = HEIGHT*.5
         player2.index = 1
+        self.set_player_attr(player2, player2_attrs)
 
         self.players = [player1, player2]
         self.group.add(player1.sprite, player2.sprite)
+
+    def set_player_attr(self, player, attrs):
+        player.power = BASEPOWER * pow((attrs[0] / 300), 2)
+        player.max_health += attrs[1]
+        player.health = player.max_health
+        player.speed = BASESPEED * (attrs[2] / 300)
 
     def run(self):
         self.running = True
@@ -165,23 +181,31 @@ class Game:
             self.win = PLAYER1
 
         if not self.win == -1:
-            self.players[PLAYER1].attacking = False
-            self.players[PLAYER2].attacking = False
+            for player in self.players:
+                player.attacking = False
+                if not player.fist is None:
+                    player.fist.sprite.kill()
+                    player.fist = None
+            
             self.timer = 0
 
         for player in self.players:
             other = self.players[1 - player.index]
 
+            if not player.fist is None:
+             if (player.fist.x < -1 * FISTSIZE and player.fist.dir > 0) or player.fist.x > WIDTH - FISTSIZE:
+                player.fist.alive = False
+
             if not other.fist is None:
                 if player.rect.contains(other.fist.colliderect):
-                    player.health -= .1
+                    player.health -= 30 * other.power
                     if player.health < 0:
                             player.health = 0
                     other.fist.sprite.kill()
-                    other.fist.x += 1000
+                    other.fist.alive = False
 
             if not player.speedy == 0:
-                player.y += player.speedy * player.speed * player.jumpspeed
+                player.y += player.speedy * player.jumpspeed
                 player.speedy += self.gravity
 
                 if player.rect.colliderect(other):
@@ -189,7 +213,7 @@ class Game:
                         player.y = other.y - SIZE
                         player.speedy += -1
                         player.speedy = max(player.speedy, -1)
-                        other.health -= .01
+                        other.health -= 10
                         if other.health < 0:
                             other.health = 0
 
@@ -217,6 +241,9 @@ class Game:
     def draw(self, screen):
         screen.fill(BGCOLOR)
 
+        player1 = self.players[PLAYER1]
+        player2 = self.players[PLAYER2]
+
         # timer
         clock = str(math.ceil(self.timer/60))
         label = self.font.render(clock, 1, pygame.Color("black"))
@@ -226,39 +253,48 @@ class Game:
         screen.blit(label, labelpos)
 
         # health bars
-        left_width = (math.floor(WIDTH/2) - 50) * self.players[PLAYER1].health
+        left_width = (math.floor(WIDTH/2) - 50) * (player1.health / player1.max_health)
         left_bar = pygame.Rect((10, 10), (left_width, 50))
         left_stroke = pygame.Rect((10, 10), (math.floor(WIDTH/2) - 50, 50))
         pygame.draw.rect(screen, pygame.Color("green"), left_bar)
         pygame.draw.rect(screen, pygame.Color("black"), left_stroke, 2)
 
-        left_label = self.font.render("Red", 1, pygame.Color("red"))
-        left_labelpos = left_label.get_rect()
-        left_labelpos.centerx = 50
-        left_labelpos.centery = left_bar.centery
-        screen.blit(left_label, left_labelpos)
+        left_name = self.font.render("Red", 1, pygame.Color("red"))
+        left_namepos = left_name.get_rect()
+        left_namepos.centerx = 50
+        left_namepos.centery = left_bar.centery
+        screen.blit(left_name, left_namepos)
 
-        right_width = (math.floor(WIDTH/2) - 50) * self.players[PLAYER2].health
-        right_offset = ((math.floor(WIDTH/2) + 40) + ((math.floor(WIDTH/2) - 50) * (1 - self.players[PLAYER2].health)))
+        left_current = self.font.render("%d/%d" % (player1.health, player1.max_health), 1, pygame.Color("red"))
+        left_currentpos = left_current.get_rect()
+        left_currentpos.centerx = WIDTH/2 - 120
+        left_currentpos.centery = left_bar.centery
+        screen.blit(left_current, left_currentpos)
+
+        right_width = (math.floor(WIDTH/2) - 50) * (player2.health / player2.max_health)
+        right_offset = ((math.floor(WIDTH/2) + 40) + ((math.floor(WIDTH/2) - 50) * (1 - player2.health / player2.max_health)))
         right_bar = pygame.Rect((right_offset, 10), (right_width, 50))
         right_stroke = pygame.Rect(((math.floor(WIDTH/2) + 40), 10), (math.floor(WIDTH/2) - 50, 50))
         pygame.draw.rect(screen, pygame.Color("green"), right_bar)
         pygame.draw.rect(screen, pygame.Color("black"), right_stroke, 2)
 
-        right_label = self.font.render("Blue", 1, pygame.Color("blue"))
-        right_labelpos = right_label.get_rect()
-        right_labelpos.centerx = WIDTH - 60
-        right_labelpos.centery = right_bar.centery
-        screen.blit(right_label, right_labelpos)
+        right_name = self.font.render("Blue", 1, pygame.Color("blue"))
+        right_namepos = right_name.get_rect()
+        right_namepos.centerx = WIDTH - 60
+        right_namepos.centery = right_bar.centery
+        screen.blit(right_name, right_namepos)
+
+        right_current = self.font.render("%d/%d" % (player2.health, player2.max_health), 1, pygame.Color("blue"))
+        right_currentpos = right_current.get_rect()
+        right_currentpos.centerx = WIDTH/2 + 120
+        right_currentpos.centery = right_bar.centery
+        screen.blit(right_current, right_currentpos)
 
         # stage
         ground = pygame.Rect((0, HEIGHT*.75), (WIDTH, HEIGHT*.75))
         pygame.draw.rect(screen, (75, 75, 75), ground)
 
         # players
-        player1 = self.players[PLAYER1]
-        player2 = self.players[PLAYER2]
-
         fist1 = player1.fist
         fist2 = player2.fist
 
@@ -271,6 +307,8 @@ class Game:
                 self.group.add(fist1.sprite)
                 fist1.x = player1.x
                 fist1.y = player1.y
+                fist1.alive = True
+                fist1.speed = player1.speed * 1.5
                 if player1.x - player2.x > 0:
                     fist1.dir = -1
 
@@ -292,7 +330,7 @@ class Game:
             fist1.rect = pygame.Rect((fist1.x, fist1.y), (SIZE, SIZE))
             fist1.sprite.rect = fist1.rect
 
-            if player1.attack_time - self.timer > 120:
+            if not fist1.alive or player1.attack_time - self.timer > LIFESPAN:
                 player1.attacking = False 
                 fist1.sprite.kill() 
                 player1.fist = None
@@ -320,6 +358,8 @@ class Game:
                 self.group.add(fist2.sprite)
                 fist2.x = player2.x
                 fist2.y = player2.y
+                fist2.alive = True
+                fist2.speed = player2.speed * 1.5
                 if player1.x - player2.x > 0:
                     fist2.dir = -1
 
@@ -340,7 +380,7 @@ class Game:
             fist2.rect = pygame.Rect((fist2.x, fist2.y), (SIZE, SIZE))
             fist2.sprite.rect = fist2.rect
 
-            if player2.attack_time - self.timer > 120:
+            if not fist2.alive  or player2.attack_time - self.timer > LIFESPAN:
                 player2.attacking = False
                 fist2.sprite.kill()
                 player2.fist = None
@@ -414,7 +454,8 @@ class Game:
     def quit(self):
         self.running = False
 
-
 if __name__ == '__main__':
-    game = Game()
+    player1_attrs = (800, 100, 10)
+    player2_attrs = (300, 350, 300)
+    game = Game(player1_attrs, player2_attrs)
     game.run()
