@@ -121,20 +121,18 @@ class Game:
 
         self.group = pygame.sprite.Group()
 
-        player1 = Player()
+        self.player1 = player1 = Player()
         player1.x = WIDTH*.25 - 50
         player1.y = HEIGHT*.5
         player1.index = 0
 
-        player2 = Player()
+        self.player2 = player2 = Player()
         player2.x = WIDTH*.75 - 50
         player2.y = HEIGHT*.5
         player2.index = 1
 
-        self.group.add(player1.sprite, player2.sprite)
-
         self.players = [player1, player2]
-        self.player1, self.player2 = self.players
+        self.group.add(player1.sprite, player2.sprite)
 
     def run(self):
         self.running = True
