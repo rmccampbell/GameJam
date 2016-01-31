@@ -130,7 +130,7 @@ class TitleAndCrawl:
     def run(self):
         self.running = True
         while self.running:
-            if self.timer >= 6000:
+            if self.timer >= 10000:
                 break
             self.draw(self.screen)
             pygame.display.flip()
@@ -656,8 +656,8 @@ class DancePlayer:
                             str(self.stats[1]), ATTRIB_COLORS[1])
         self.font.render_to(screen, (x + 120, 317),
                             str(self.stats[2]), ATTRIB_COLORS[2])
-        self.font.render_to(screen, ((15, WIDTH - 180)[self.side], 110),
-                            'Boost: %s' % self.boost_counter)
+##        self.font.render_to(screen, ((15, WIDTH - 180)[self.side], 110),
+##                            'Boost: %s' % self.boost_counter)
 
 
 class Game:
