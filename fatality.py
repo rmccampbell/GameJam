@@ -83,6 +83,11 @@ def load_images():
     img = pygame.transform.scale(img, (128, 128))
     BLUENOFIST = img
 
+    global BKGROUND
+    img = pygame.image.load("stage.png").convert_alpha()
+    img = pygame.transform.scale(img, (WIDTH, HEIGHT))
+    BKGROUND = img
+
 class Fist:
     def __init__(self):
         self.x = 0
@@ -132,18 +137,24 @@ class Game:
 
         self.player1 = player1 = Player()
         player1.x = WIDTH*.25 - RECTSIZE/2
-        player1.y = HEIGHT*.5
+        player1.y = HEIGHT*.65
         player1.index = 0
         self.set_player_attr(player1, player1_attrs)
 
         self.player2 = player2 = Player()
         player2.x = WIDTH*.75 - RECTSIZE/2
-        player2.y = HEIGHT*.5
+        player2.y = HEIGHT*.65
         player2.index = 1
         self.set_player_attr(player2, player2_attrs)
 
         self.players = [player1, player2]
         self.group.add(player1.sprite, player2.sprite)
+
+        self.bkgroup = pygame.sprite.Group()
+        self.bkground = bkground = pygame.sprite.Sprite()
+        bkground.image = BKGROUND
+        bkground.rect = Rect(0, 0, WIDTH, HEIGHT)
+        self.bkgroup.add(bkground)
 
     def set_player_attr(self, player, attrs):
         player.power = BASEPOWER * pow((attrs[0] / 300), 2)
@@ -218,8 +229,8 @@ class Game:
                         if other.health < 0:
                             other.health = 0
 
-                if player.y > HEIGHT * 0.75 - SPRITESIZE:
-                    player.y = HEIGHT * 0.75 - SPRITESIZE
+                if player.y > HEIGHT * 0.9 - SPRITESIZE:
+                    player.y = HEIGHT * 0.9 - SPRITESIZE
                     player.speedy = 0
                     player.grounded = True
 
@@ -241,13 +252,14 @@ class Game:
 
     def draw(self, screen):
         screen.fill(BGCOLOR)
+        self.bkgroup.draw(screen)
 
         player1 = self.players[PLAYER1]
         player2 = self.players[PLAYER2]
 
         # timer
         clock = str(math.ceil(self.timer/60))
-        label = self.font.render(clock, 1, pygame.Color("black"))
+        label = self.font.render(clock, 1, pygame.Color("white"))
         labelpos = label.get_rect()
         labelpos.centerx = screen.get_rect().centerx
         labelpos.centery = 35
@@ -258,7 +270,7 @@ class Game:
         left_bar = pygame.Rect((10, 10), (left_width, 50))
         left_stroke = pygame.Rect((10, 10), (math.floor(WIDTH/2) - 50, 50))
         pygame.draw.rect(screen, pygame.Color("green"), left_bar)
-        pygame.draw.rect(screen, pygame.Color("black"), left_stroke, 2)
+        pygame.draw.rect(screen, pygame.Color("black"), left_stroke, 3)
 
         left_name = self.font.render("Red", 1, pygame.Color("red"))
         left_namepos = left_name.get_rect()
@@ -277,7 +289,7 @@ class Game:
         right_bar = pygame.Rect((right_offset, 10), (right_width, 50))
         right_stroke = pygame.Rect(((math.floor(WIDTH/2) + 40), 10), (math.floor(WIDTH/2) - 50, 50))
         pygame.draw.rect(screen, pygame.Color("green"), right_bar)
-        pygame.draw.rect(screen, pygame.Color("black"), right_stroke, 2)
+        pygame.draw.rect(screen, pygame.Color("black"), right_stroke, 3)
 
         right_name = self.font.render("Blue", 1, pygame.Color("blue"))
         right_namepos = right_name.get_rect()
@@ -290,10 +302,6 @@ class Game:
         right_currentpos.centerx = WIDTH/2 + 120
         right_currentpos.centery = right_bar.centery
         screen.blit(right_current, right_currentpos)
-
-        # stage
-        ground = pygame.Rect((0, HEIGHT*.75), (WIDTH, HEIGHT*.75))
-        pygame.draw.rect(screen, (75, 75, 75), ground)
 
         # players
         fist1 = player1.fist
