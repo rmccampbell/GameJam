@@ -2,7 +2,7 @@
 import sys, os, pygame, pygame.freetype, random
 from pygame.locals import *
 
-FPS = 40
+FPS = 70
 
 BGCOLOR = (255, 255, 255)
 
