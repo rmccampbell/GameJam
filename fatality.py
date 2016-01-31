@@ -16,9 +16,10 @@ RIGHT = 2
 PLAYER1 = 0
 PLAYER2 = 1
 
+SIZE = 100
+
 class Player:
     def __init__(self):
-        self.size = 100
         self.x = 0
         self.y = 0
         self.speed = 5
@@ -27,6 +28,9 @@ class Player:
         self.speedx = 0
         self.speedy = 0
         self.grounded = True
+        self.rect = None
+        self.sprite = None
+        self.index = None
 
 class Game:
     def __init__(self):
@@ -42,12 +46,17 @@ class Game:
         player1 = Player()
         player1.x = WIDTH*.25 - 50
         player1.y = HEIGHT*.5
+        player1.index = 0
 
         player2 = Player()
         player2.x = WIDTH*.75 - 50
         player2.y = HEIGHT*.5
+        player2.index = 1
 
-        self.players = [player1, player2]
+        if player1.power >= player2.power: 
+            self.players = [player1, player2]
+        else:
+            self.players = [player2, player1]
 
     def run(self):
         self.running = True
@@ -64,7 +73,14 @@ class Game:
 
     def update(self):
         if self.timer <= 0:
-            self.timer = 60
+            self.timer = 0
+            if self.players[PLAYER1].health < self.players[PLAYER2].health:
+                self.win = 1
+            elif self.players[PLAYER2].health < self.players[PLAYER1].health:
+                self.win = 0
+            else:
+                self.win = 2
+
         if self.win == -1:
             self.timer -= 1
 
@@ -74,20 +90,38 @@ class Game:
             self.win = PLAYER1
 
         for player in self.players:
-            player.x += player.speedx * player.speed
-            player.speedx = 0
-            if player.x < 0:
-                player.x = 0
-            elif player.x > WIDTH - player.size:
-                player.x =  WIDTH - player.size
+            other = self.players[1 - player.index]
 
-            player.y += player.speedy * player.speed*5
-            player.speedy += self.gravity
-            if player.y > HEIGHT * 0.75 - player.size:
-                player.y = HEIGHT * 0.75 - player.size
-                player.speedy = 0
-                player.grounded = True
+            if not player.speedy == 0:
+                player.y += player.speedy * player.speed*5
+                player.speedy += self.gravity
 
+                if player.rect.colliderect(other):
+                    if player.y - other.y < SIZE and abs(player.x - other.x) < SIZE - 10:
+                        player.y = other.y - SIZE
+                        player.speedy += -1
+                        other.health -= .01
+
+                if player.y > HEIGHT * 0.75 - SIZE:
+                    player.y = HEIGHT * 0.75 - SIZE
+                    player.speedy = 0
+                    player.grounded = True
+
+            if not player.speedx == 0:
+                player.x += player.speedx * player.speed
+
+                if player.x < 0:
+                    player.x = 0
+                elif player.x > WIDTH - SIZE:
+                    player.x =  WIDTH - SIZE
+
+                if player.rect.colliderect(other) and player.y > other.y - SIZE:
+                    if player.x < other.x:
+                        player.x = other.x - SIZE
+                    else:
+                        player.x = other.x + SIZE
+
+                player.speedx = 0
 
 
     def draw(self, screen):
@@ -95,7 +129,7 @@ class Game:
 
         # timer
         clock = str(math.ceil(self.timer/60))
-        label = self.font.render(clock, 1, pygame.Color("blue"))
+        label = self.font.render(clock, 1, pygame.Color("black"))
         labelpos = label.get_rect()
         labelpos.centerx = screen.get_rect().centerx
         labelpos.centery = 35
@@ -105,14 +139,14 @@ class Game:
         left_width = (math.floor(WIDTH/2) - 50) * self.players[PLAYER1].health
         left_bar = pygame.Rect((10, 10), (left_width, 50))
         left_stroke = pygame.Rect((10, 10), (math.floor(WIDTH/2) - 50, 50))
-        pygame.draw.rect(screen, pygame.Color("red"), left_bar)
+        pygame.draw.rect(screen, pygame.Color("green"), left_bar)
         pygame.draw.rect(screen, pygame.Color("black"), left_stroke, 2)
 
         right_width = (math.floor(WIDTH/2) - 50) * self.players[PLAYER2].health
         right_offset = ((math.floor(WIDTH/2) + 40) + ((math.floor(WIDTH/2) - 50) * (1 - self.players[PLAYER2].health)))
         right_bar = pygame.Rect((right_offset, 10), (right_width, 50))
         right_stroke = pygame.Rect(((math.floor(WIDTH/2) + 40), 10), (math.floor(WIDTH/2) - 50, 50))
-        pygame.draw.rect(screen, pygame.Color("red"), right_bar)
+        pygame.draw.rect(screen, pygame.Color("green"), right_bar)
         pygame.draw.rect(screen, pygame.Color("black"), right_stroke, 2)
 
         # stage
@@ -120,17 +154,33 @@ class Game:
         pygame.draw.rect(screen, pygame.Color("black"), ground)
 
         # players
-        player1 = pygame.Rect((self.players[PLAYER1].x, self.players[PLAYER1].y), (self.players[PLAYER1].size, self.players[PLAYER1].size))
-        pygame.draw.rect(screen, pygame.Color("red"), player1)
+        group = pygame.sprite.Group()
 
-        player2 = pygame.Rect((self.players[PLAYER2].x, self.players[PLAYER2].y), (self.players[PLAYER2].size, self.players[PLAYER2].size))
-        pygame.draw.rect(screen, pygame.Color("blue"), player2)
+        player1 = self.players[PLAYER1]
+        player1.rect = pygame.Rect((player1.x, player1.y), (SIZE, SIZE))
+        pygame.draw.rect(screen, pygame.Color("red"), player1.rect)
+
+        player2 = self.players[PLAYER2]
+        player2.sprite = pygame.sprite.Sprite()
+        player2.sprite.image = pygame.image.load("blueidle.png").convert()
+        player2.sprite.image.set_colorkey((255, 255, 255))
+        player2.sprite.image = pygame.transform.scale(player2.sprite.image, (100, 100))
+        player2.rect = pygame.Rect((player2.x, player2.y), (SIZE, SIZE))
+        player2.sprite.rect = player2.rect
+
+        group.add(player2.sprite)
+
+        # pygame.draw.rect(screen, pygame.Color("blue"), player2.rect)
+        group.draw(screen)
+
 
         if not self.win == -1:
             if self.win == PLAYER1:
-                win_label = self.font.render("Player 1 Wins!", 1, pygame.Color("blue"))
+                win_label = self.font.render("Player 1 Wins!", 1, pygame.Color("black"))
+            elif self.win == PLAYER2:
+                win_label = self.font.render("Player 2 Wins!", 1, pygame.Color("black"))
             else:
-                 win_label = self.font.render("Player 2 Wins!", 1, pygame.Color("blue"))
+                win_label = self.font.render("It's a Draw!", 1, pygame.Color("black"))
 
             win_labelpos = win_label.get_rect()
             win_labelpos.centerx = screen.get_rect().centerx
