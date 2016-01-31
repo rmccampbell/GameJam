@@ -14,10 +14,10 @@ UP = 1
 RIGHT = 2
 
 DIR_CHARS = [['Q', 'A', 'Z'], ['O', 'K', 'M']]
-DIR_COLORS = [(0, 255, 255), (255, 0, 255), (255, 255, 0)]
+DIR_COLORS = [(0, 255, 0), (255, 0, 255), (255, 127, 0)]
 
 ATTRIB_COLORS = [(180, 0, 0), (100, 100, 255), (223, 223, 0)]
-SELECT_COLORS = [(255, 220, 220), (220, 220, 255), (255, 255, 220)]
+SELECT_COLORS = [(255, 200, 200, 150), (220, 220, 255, 150), (255, 255, 100, 150)]
 
 MUSIC_SPEED = 2
 MUSIC_RATE = 120
@@ -30,15 +30,28 @@ SPEED_IMG = None
 UP_IMG = None
 DOWN_IMG = None
 LEFT_IMG = None
+REDDANCE = []
+BLUEDANCE = []
+SELECT_RECTS = []
 
 def load_images():
     global POWER_IMG, HEALTH_IMG, SPEED_IMG, UP_IMG, DOWN_IMG, LEFT_IMG
     POWER_IMG = pygame.image.load("power.png").convert_alpha()
-    #POWER_IMG = pygame.transform.scale(POWER_IMG, (128, 128))
     HEALTH_IMG = pygame.image.load("health.png").convert_alpha()
-    #HEALTH_IMG = pygame.transform.scale(HEALTH_IMG, (128, 128))
     SPEED_IMG = pygame.image.load("speed.png").convert_alpha()
-    #SPEED_IMG = pygame.transform.scale(SPEED_IMG, (128, 128))
+    for i in range(1, 9):
+        img = pygame.image.load("reddance%d.png" % i).convert_alpha()
+        img = pygame.transform.scale(img, (128, 128))
+        REDDANCE.append(img)
+    for i in range(1, 9):
+        img = pygame.image.load("bluedance%d.png" % i).convert_alpha()
+        img = pygame.transform.scale(img, (128, 128))
+        img = pygame.transform.flip(img, True, False)
+        BLUEDANCE.append(img)
+    for i in range(3):
+        rect = pygame.Surface((400, 60), SRCALPHA)
+        rect.fill((SELECT_COLORS[i]))
+        SELECT_RECTS.append(rect)
 
 
 class Beat:
@@ -132,7 +145,8 @@ class Player:
         for i in range(3):
             y = i*150 + 40
             if self.active_tracks[i]:
-                pygame.draw.rect(screen, SELECT_COLORS[i], (left, y, 400, 60))
+                screen.blit(SELECT_RECTS[i], (left, y))
+                #pygame.draw.rect(screen, SELECT_COLORS[i], (left, y, 400, 60))
         for beat in self.beats:
             beat.draw(screen)
         x = (-10, WIDTH - 160)[self.side]
@@ -156,13 +170,16 @@ class Game:
         pygame.display.set_caption('GameJam')
         load_images()
         self.font = pygame.freetype.Font('bauhaus-93.ttf', 24)
+        pygame.mixer.music.load('Protocol 2 - Electric Boogaloo.ogg')
         self.player1 = Player(0, self)
         self.player2 = Player(1, self)
         self.timer = 0
         self.speed_mult = [1, 1, 1]
         self.running = False
+        self.anim_timer = 40
 
     def run(self):
+        pygame.mixer.music.play()
         self.running = True
         clock = pygame.time.Clock()
         try:
@@ -197,6 +214,12 @@ class Game:
     def draw(self, screen):
         screen.fill(BGCOLOR)
 
+        # draw background stuff
+        screen.blit(REDDANCE[self.anim_timer*2//15], (136, 222))
+        screen.blit(BLUEDANCE[self.anim_timer*2//15], (536, 222))
+        self.anim_timer = (self.anim_timer + 1) % 60
+
+        # draw game
         self.player1.draw(screen)
         self.player2.draw(screen)
 
