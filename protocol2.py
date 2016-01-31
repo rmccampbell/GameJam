@@ -676,12 +676,12 @@ class Game:
         self.anim_timer = 40
 
     def run(self):
-        pygame.mixer.music.play(-1)
         self.running = True
         clock = pygame.time.Clock()
         try:
             titlecrawl = TitleAndCrawl(self.screen)
             self.running = titlecrawl.run()
+            pygame.mixer.music.play(-1)
             frames = 0
             while self.running:
                 if frames >= 14490:
