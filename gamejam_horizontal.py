@@ -16,12 +16,29 @@ RIGHT = 2
 DIR_CHARS = ['<', '^', '>']
 DIR_COLORS = [(0, 255, 255), (255, 0, 255), (255, 255, 0)]
 
-ATTRIB_COLORS = [(255, 0, 0), (0, 0, 255), (255, 255, 0)]
+ATTRIB_COLORS = [(180, 0, 0), (100, 100, 255), (223, 223, 0)]
 SELECT_COLORS = [(255, 220, 220), (220, 220, 255), (255, 255, 220)]
 
 MUSIC_SPEED = 2
 MUSIC_RATE = 60
 POINT_RATE = 30
+
+
+POWER_IMG = None
+HEALTH_IMG = None
+SPEED_IMG = None
+UP_IMG = None
+DOWN_IMG = None
+LEFT_IMG = None
+
+def load_images():
+    global POWER_IMG, HEALTH_IMG, SPEED_IMG, UP_IMG, DOWN_IMG, LEFT_IMG
+    POWER_IMG = pygame.image.load("power.png").convert_alpha()
+    #POWER_IMG = pygame.transform.scale(POWER_IMG, (128, 128))
+    HEALTH_IMG = pygame.image.load("health.png").convert_alpha()
+    #HEALTH_IMG = pygame.transform.scale(HEALTH_IMG, (128, 128))
+    SPEED_IMG = pygame.image.load("speed.png").convert_alpha()
+    #SPEED_IMG = pygame.transform.scale(SPEED_IMG, (128, 128))
 
 
 class Beat:
@@ -124,14 +141,18 @@ class Player:
                 pygame.draw.rect(screen, SELECT_COLORS[i], (left, y, 400, 60))
         for beat in self.beats:
             beat.draw(screen)
-        self.font.render_to(screen, (left + 25, 10),
-                            'Power: %d' % self.power, ATTRIB_COLORS[0])
-        self.font.render_to(screen, (left + 165, 10),
-                            'Health: %d' % self.health, ATTRIB_COLORS[1])
-        self.font.render_to(screen, (left + 305, 10),
-                            'Speed: %d' % self.speed, ATTRIB_COLORS[2])
-        self.font.render_to(screen, (left + 25, 140),
-                            'Boost: %d' % self.boost_counter)
+        x = -10 if self.side == 0 else WIDTH - 160
+        screen.blit(POWER_IMG, (x, 8))
+        screen.blit(HEALTH_IMG, (x, 158))
+        screen.blit(SPEED_IMG, (x, 308))
+        self.font.render_to(screen, (x + 120, 17),
+                            str(self.power), ATTRIB_COLORS[0])
+        self.font.render_to(screen, (x + 120, 167),
+                            str(self.health), ATTRIB_COLORS[1])
+        self.font.render_to(screen, (x + 120, 317),
+                            str(self.speed), ATTRIB_COLORS[2])
+##        self.font.render_to(screen, (x + 25, 110),
+##                            'Boost: %d' % self.boost_counter)
 
 
 class Game:
@@ -139,7 +160,8 @@ class Game:
         pygame.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption('GameJam')
-        self.font = pygame.freetype.SysFont('Arial', 20)
+        load_images()
+        self.font = pygame.freetype.Font('BAUHS93.TTF', 24)
         self.player1 = Player(0, self)
         self.player2 = Player(1, self)
         self.timer = 0

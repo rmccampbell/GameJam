@@ -28,6 +28,23 @@ MUSIC_RATE = 120
 POINT_RATE = 30
 
 
+POWER_IMG = None
+HEALTH_IMG = None
+SPEED_IMG = None
+UP_IMG = None
+DOWN_IMG = None
+LEFT_IMG = None
+
+def load_images():
+    global POWER_IMG, HEALTH_IMG, SPEED_IMG, UP_IMG, DOWN_IMG, LEFT_IMG
+    POWER_IMG = pygame.image.load("power.png").convert_alpha()
+    #POWER_IMG = pygame.transform.scale(POWER_IMG, (128, 128))
+    HEALTH_IMG = pygame.image.load("health.png").convert_alpha()
+    #HEALTH_IMG = pygame.transform.scale(HEALTH_IMG, (128, 128))
+    SPEED_IMG = pygame.image.load("speed.png").convert_alpha()
+    #SPEED_IMG = pygame.transform.scale(SPEED_IMG, (128, 128))
+
+
 class Beat:
     def __init__(self, dirs, track, player):
         self.player = player
@@ -128,14 +145,17 @@ class Player:
                                  (x, 40, 60, HEIGHT-40))
         for beat in self.beats:
             beat.draw(screen)
-        self.font.render_to(screen, (left + 35, 10),
-                            'Power: %d' % self.power, ATTRIB_COLORS[0])
-        self.font.render_to(screen, (left + 165, 10),
-                            'Health: %d' % self.health, ATTRIB_COLORS[1])
-        self.font.render_to(screen, (left + 295, 10),
-                            'Speed: %d' % self.speed, ATTRIB_COLORS[2])
-        self.font.render_to(screen, (left + 105, 140),
-                            'Boost: %d' % self.boost_counter)
+##        self.font.render_to(screen, (left + 35, 10),
+##                            'Power: %d' % self.power, ATTRIB_COLORS[0])
+##        self.font.render_to(screen, (left + 165, 10),
+##                            'Health: %d' % self.health, ATTRIB_COLORS[1])
+##        self.font.render_to(screen, (left + 295, 10),
+##                            'Speed: %d' % self.speed, ATTRIB_COLORS[2])
+##        self.font.render_to(screen, (left + 105, 140),
+##                            'Boost: %d' % self.boost_counter)
+        screen.blit(POWER_IMG, (left + 5, 8))
+        screen.blit(HEALTH_IMG, (left + 130, 8))
+        screen.blit(SPEED_IMG, (left + 260, 8))            
 
 
 class Game:
@@ -143,6 +163,7 @@ class Game:
         pygame.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption('GameJam')
+        load_images()
         self.font = pygame.freetype.SysFont('Arial', 20)
         self.player1 = Player(0, self)
         self.player2 = Player(1, self)
