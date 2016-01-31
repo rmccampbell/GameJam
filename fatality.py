@@ -31,6 +31,7 @@ class Player:
         self.rect = None
         self.sprite = None
         self.index = None
+        self.sprite_num = 1
 
 class Game:
     def __init__(self):
@@ -42,6 +43,7 @@ class Game:
         self.running = False
         self.win = -1
         self.gravity = .05
+        self.group = pygame.sprite.Group()
 
         player1 = Player()
         player1.x = WIDTH*.25 - 50
@@ -124,7 +126,6 @@ class Game:
 
                 player.speedx = 0
 
-
     def draw(self, screen):
         screen.fill(BGCOLOR)
 
@@ -169,7 +170,6 @@ class Game:
         # players
         player1 = self.players[PLAYER1]
         player2 = self.players[PLAYER2]
-        group = pygame.sprite.Group()
 
         player1.sprite = pygame.sprite.Sprite()
         player1.sprite.image = pygame.image.load("redidle.png").convert()
@@ -182,9 +182,16 @@ class Game:
         player1.rect = pygame.Rect((player1.x, player1.y), (SIZE, SIZE))
         player1.sprite.rect = player1.rect
 
+        player2.sprite = None
         player2.sprite = pygame.sprite.Sprite()
-        player2.sprite.image = pygame.image.load("blueidle.png").convert()
-        player2.sprite.image.set_colorkey((255, 255, 255))
+        player2.sprite.image = pygame.image.load("bluedance" + str(player2.sprite_num) + ".png").convert()
+        
+        if (self.timer % 50 == 0):
+            player2.sprite_num += 1
+            if (player2.sprite_num > 8):
+                player2.sprite_num = 1
+
+        player2.sprite.image.set_colorkey((0, 0, 0))
         player2.sprite.image = pygame.transform.scale(player2.sprite.image, (115, 115))
         
         if player2.x > player1.x:
@@ -193,9 +200,9 @@ class Game:
         player2.rect = pygame.Rect((player2.x, player2.y), (SIZE, SIZE))
         player2.sprite.rect = player2.rect
 
-        group.add(player1.sprite)
-        group.add(player2.sprite)
-        group.draw(screen)
+        self.group.add(player1.sprite)
+        self.group.add(player2.sprite)
+        self.group.draw(screen)
 
         if not self.win == -1:
             if self.win == PLAYER1:
