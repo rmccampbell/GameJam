@@ -169,7 +169,7 @@ class Game:
             other = self.players[1 - player.index]
 
             if not other.fist is None:
-                if player.rect.contains(other.fist):
+                if player.rect.contains(other.fist.colliderect):
                     player.health -= .1
                     other.fist.sprite.kill()
                     other.fist.x += 1000
