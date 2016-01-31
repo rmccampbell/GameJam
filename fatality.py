@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+from __future__ import division
 import sys, os, pygame, pygame.freetype, random, math
 from pygame.locals import *
+
 
 FPS = 60
 
@@ -17,6 +19,9 @@ PLAYER1 = 0
 PLAYER2 = 1
 
 SIZE = 100
+FISTSIZE = 50
+
+LIFESPAN = 300
 
 REDDANCE = []
 
@@ -84,7 +89,7 @@ class Fist:
         self.dir = 1
         self.speed = 5
         self.sprite_num = 1
-        self.lifespan = 120
+        self.alive = True
         self.rect = None
         self.colliderect = None
         self.sprite = pygame.sprite.Sprite()
@@ -187,13 +192,17 @@ class Game:
         for player in self.players:
             other = self.players[1 - player.index]
 
+            if not player.fist is None:
+             if (player.fist.x < -1 * FISTSIZE and player.fist.dir > 0) or player.fist.x > WIDTH - FISTSIZE:
+                player.fist.alive = False
+
             if not other.fist is None:
                 if player.rect.contains(other.fist.colliderect):
                     player.health -= 30 * other.power
                     if player.health < 0:
                             player.health = 0
                     other.fist.sprite.kill()
-                    other.fist.x += 1000
+                    other.fist.alive = False
 
             if not player.speedy == 0:
                 player.y += player.speedy * player.jumpspeed
@@ -298,7 +307,7 @@ class Game:
                 self.group.add(fist1.sprite)
                 fist1.x = player1.x
                 fist1.y = player1.y
-                fist1.lifespan = 120 * (1 / (player2.speed / 5))
+                fist1.alive = True
                 fist1.speed = player1.speed * 1.5
                 if player1.x - player2.x > 0:
                     fist1.dir = -1
@@ -321,7 +330,7 @@ class Game:
             fist1.rect = pygame.Rect((fist1.x, fist1.y), (SIZE, SIZE))
             fist1.sprite.rect = fist1.rect
 
-            if player1.attack_time - self.timer > fist1.lifespan:
+            if not fist1.alive or player1.attack_time - self.timer > LIFESPAN:
                 player1.attacking = False 
                 fist1.sprite.kill() 
                 player1.fist = None
@@ -349,7 +358,7 @@ class Game:
                 self.group.add(fist2.sprite)
                 fist2.x = player2.x
                 fist2.y = player2.y
-                fist2.lifespan = 120 * (1 / (player2.speed / 5))
+                fist2.alive = True
                 fist2.speed = player2.speed * 1.5
                 if player1.x - player2.x > 0:
                     fist2.dir = -1
@@ -371,7 +380,7 @@ class Game:
             fist2.rect = pygame.Rect((fist2.x, fist2.y), (SIZE, SIZE))
             fist2.sprite.rect = fist2.rect
 
-            if player2.attack_time - self.timer > fist2.lifespan:
+            if not fist2.alive  or player2.attack_time - self.timer > LIFESPAN:
                 player2.attacking = False
                 fist2.sprite.kill()
                 player2.fist = None
@@ -446,7 +455,7 @@ class Game:
         self.running = False
 
 if __name__ == '__main__':
-    player1_attrs = (500, 200, 150)
+    player1_attrs = (800, 100, 10)
     player2_attrs = (300, 350, 300)
     game = Game(player1_attrs, player2_attrs)
     game.run()
