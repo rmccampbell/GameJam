@@ -4,7 +4,7 @@ from pygame.locals import *
 
 FPS = 60
 
-BGCOLOR = (255, 255, 255)
+BGCOLOR = (255, 200, 255)
 
 WIDTH = 800
 HEIGHT = 400
@@ -18,18 +18,37 @@ PLAYER2 = 1
 
 SIZE = 100
 
+REDDANCE = []
+
+BLUEDANCE = []
+
+
+def load_images():
+    global REDDANCE, BLUEDANCE
+    for i in range(1, 9):
+        img = pygame.image.load("reddance%d.png" % i).convert_alpha()
+        img.set_colorkey((0, 0, 0))
+        img = pygame.transform.scale(img, (115, 115))
+        REDDANCE.append(img)
+    for i in range(1, 9):
+        img = pygame.image.load("bluedance%d.png" % i).convert_alpha()
+        img = pygame.transform.scale(img, (115, 115))
+        BLUEDANCE.append(img)
+
+
 class Player:
     def __init__(self):
         self.x = 0
         self.y = 0
         self.speed = 5
+        self.jumpspeed = 4
         self.health = 1
         self.power = 5
         self.speedx = 0
         self.speedy = 0
         self.grounded = True
         self.rect = None
-        self.sprite = None
+        self.sprite = pygame.sprite.Sprite()
         self.index = None
         self.sprite_num = 7
 
@@ -44,6 +63,8 @@ class Game:
         self.win = -1
         self.gravity = .05
 
+        load_images()
+
         self.group = pygame.sprite.Group()
 
         player1 = Player()
@@ -56,10 +77,13 @@ class Game:
         player2.y = HEIGHT*.5
         player2.index = 1
 
+        self.group.add(player1.sprite, player2.sprite)
+
         if player1.power >= player2.power: 
             self.players = [player1, player2]
         else:
             self.players = [player2, player1]
+        self.player1, self.player2 = self.players
 
     def run(self):
         self.running = True
@@ -96,7 +120,7 @@ class Game:
             other = self.players[1 - player.index]
 
             if not player.speedy == 0:
-                player.y += player.speedy * player.speed*5
+                player.y += player.speedy * player.speed * player.jumpspeed
                 player.speedy += self.gravity
 
                 if player.rect.colliderect(other):
@@ -129,7 +153,6 @@ class Game:
 
     def draw(self, screen):
         screen.fill(BGCOLOR)
-        self.group.empty()
 
         # timer
         clock = str(math.ceil(self.timer/60))
@@ -167,43 +190,38 @@ class Game:
 
         # stage
         ground = pygame.Rect((0, HEIGHT*.75), (WIDTH, HEIGHT*.75))
-        pygame.draw.rect(screen, pygame.Color("black"), ground)
+        pygame.draw.rect(screen, (75, 75, 75), ground)
 
         # players
         player1 = self.players[PLAYER1]
         player2 = self.players[PLAYER2]
 
-        player1.sprite = pygame.sprite.Sprite()
-        player1.sprite.image = pygame.image.load("redidle.png").convert()
-        player1.sprite.image.set_colorkey((255, 255, 255))
-        player1.sprite.image = pygame.transform.scale(player1.sprite.image, (115, 115))
-        
+        player1.sprite.image = REDDANCE[player1.sprite_num-1]
+
+        if (self.timer % 5 == 0):
+            player1.sprite_num += 1
+            if (player1.sprite_num > 8):
+                player1.sprite_num = 1
+
         if player1.x > player2.x:
             player1.sprite.image = pygame.transform.flip(player1.sprite.image, True, False)
 
         player1.rect = pygame.Rect((player1.x, player1.y), (SIZE, SIZE))
         player1.sprite.rect = player1.rect
 
-        player2.sprite = None
-        player2.sprite = pygame.sprite.Sprite()
-        player2.sprite.image = pygame.image.load("bluedance" + str(player2.sprite_num) + ".png").convert()
+        player2.sprite.image = BLUEDANCE[player2.sprite_num-1]
         
         if (self.timer % 5 == 0):
             player2.sprite_num += 1
             if (player2.sprite_num > 8):
                 player2.sprite_num = 1
 
-        player2.sprite.image.set_colorkey((0, 0, 0))
-        player2.sprite.image = pygame.transform.scale(player2.sprite.image, (115, 115))
-        
         if player2.x > player1.x:
             player2.sprite.image = pygame.transform.flip(player2.sprite.image, True, False)
         
         player2.rect = pygame.Rect((player2.x, player2.y), (SIZE, SIZE))
         player2.sprite.rect = player2.rect
 
-        self.group.add(player1.sprite)
-        self.group.add(player2.sprite)
         self.group.draw(screen)
 
         if not self.win == -1:
