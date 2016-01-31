@@ -80,7 +80,6 @@ class Fist:
         self.y = 0
         self.dir = 1
         self.speed = 5
-        self.power = 5
         self.sprite_num = 1
         self.lifespan = 120
         self.rect = None
@@ -92,7 +91,7 @@ class Player:
         self.x = 0
         self.y = 0
         self.speed = 5
-        self.jumpspeed = 4
+        self.jumpspeed = 20
         self.health = 1
         self.power = 5
         self.speedx = 0
@@ -107,7 +106,7 @@ class Player:
         self.fist = None
 
 class Game:
-    def __init__(self):
+    def __init__(self, player1_attrs, player2_attrs):
         pygame.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption('GameJam')
@@ -125,14 +124,21 @@ class Game:
         player1.x = WIDTH*.25 - 50
         player1.y = HEIGHT*.5
         player1.index = 0
+        self.set_player_attr(player1, player1_attrs)
 
         self.player2 = player2 = Player()
         player2.x = WIDTH*.75 - 50
         player2.y = HEIGHT*.5
         player2.index = 1
+        self.set_player_attr(player2, player2_attrs)
 
         self.players = [player1, player2]
         self.group.add(player1.sprite, player2.sprite)
+
+    def set_player_attr(self, player, attrs):
+        player.power = attrs[0]
+        player.health = attrs[1]
+        player.speed = attrs[2]
 
     def run(self):
         self.running = True
@@ -165,8 +171,12 @@ class Game:
             self.win = PLAYER1
 
         if not self.win == -1:
-            self.players[PLAYER1].attacking = False
-            self.players[PLAYER2].attacking = False
+            for player in self.players:
+                player.attacking = False
+                if not player.fist is None:
+                    player.fist.sprite.kill()
+                    player.fist = None
+            
             self.timer = 0
 
         for player in self.players:
@@ -174,14 +184,14 @@ class Game:
 
             if not other.fist is None:
                 if player.rect.contains(other.fist.colliderect):
-                    player.health -= .1
+                    player.health -= .1 * other.power
                     if player.health < 0:
                             player.health = 0
                     other.fist.sprite.kill()
                     other.fist.x += 1000
 
             if not player.speedy == 0:
-                player.y += player.speedy * player.speed * player.jumpspeed
+                player.y += player.speedy * player.jumpspeed
                 player.speedy += self.gravity
 
                 if player.rect.colliderect(other):
@@ -271,6 +281,8 @@ class Game:
                 self.group.add(fist1.sprite)
                 fist1.x = player1.x
                 fist1.y = player1.y
+                fist1.lifespan = 120 - player1.speed * 5
+                fist1.speed = player1.speed * 1.5
                 if player1.x - player2.x > 0:
                     fist1.dir = -1
 
@@ -292,7 +304,7 @@ class Game:
             fist1.rect = pygame.Rect((fist1.x, fist1.y), (SIZE, SIZE))
             fist1.sprite.rect = fist1.rect
 
-            if player1.attack_time - self.timer > 120:
+            if player1.attack_time - self.timer > fist1.lifespan:
                 player1.attacking = False 
                 fist1.sprite.kill() 
                 player1.fist = None
@@ -320,6 +332,8 @@ class Game:
                 self.group.add(fist2.sprite)
                 fist2.x = player2.x
                 fist2.y = player2.y
+                fist2.lifespan = 120 - player2.speed * 5
+                fist2.speed = player2.speed * 1.5
                 if player1.x - player2.x > 0:
                     fist2.dir = -1
 
@@ -340,7 +354,7 @@ class Game:
             fist2.rect = pygame.Rect((fist2.x, fist2.y), (SIZE, SIZE))
             fist2.sprite.rect = fist2.rect
 
-            if player2.attack_time - self.timer > 120:
+            if player2.attack_time - self.timer > fist2.lifespan:
                 player2.attacking = False
                 fist2.sprite.kill()
                 player2.fist = None
@@ -414,7 +428,8 @@ class Game:
     def quit(self):
         self.running = False
 
-
 if __name__ == '__main__':
-    game = Game()
+    player1_attrs = (2, .8, 5)
+    player2_attrs = (1, 1, 8)
+    game = Game(player1_attrs, player2_attrs)
     game.run()
