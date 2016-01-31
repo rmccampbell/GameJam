@@ -8,6 +8,7 @@ BGCOLOR = (255, 255, 255)
 
 WIDTH = 800
 HEIGHT = 450
+MID = WIDTH//2
 
 LEFT = 0
 UP = 1
@@ -15,9 +16,11 @@ RIGHT = 2
 
 DIR_CHARS = ['<', '^', '>']
 DIR_COLORS = [(0, 255, 255), (255, 0, 255), (255, 255, 0)]
+#HIT_COLORS = [(159, 255, 255), (255, 159, 255), (255, 255, 159)]
+#MISS_COLORS = [(0, 191, 191), (191, 0, 191), (191, 191, 0)]
 
-ATTRIB_COLORS = [(255, 0, 0), (0, 0, 255), (255, 255, 0)]
-SELECT_COLORS = [(255, 220, 220), (220, 220, 255), (255, 255, 220)]
+ATTRIB_COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
+SELECT_COLORS = [(240, 220, 220), (220, 240, 220), (220, 220, 240)]
 
 MUSIC_SPEED = 2
 MUSIC_RATE = 60
@@ -40,10 +43,10 @@ class Beat:
 
     def update(self):
         self.dist += MUSIC_SPEED
-        if self.dist >= 320 and not self.is_ready:
+        if self.dist >= 350 and not self.is_ready:
             self.is_ready = True
             self.player.ready_beats[self.track] = self
-        elif self.dist >= 340 and self.is_ready:
+        elif self.dist >= 370 and self.is_ready:
             self.is_ready = False
             self.check()
             self.player.ready_beats[self.track] = None
@@ -61,13 +64,12 @@ class Beat:
             self.player.active_tracks[self.track] = hit
 
     def draw(self, screen):
-        x = WIDTH//2 + self.dist * (-1, 1)[self.side]
+        y = 50 + self.dist
         for dir in range(3):
             if self.dirs[dir]:
-                y = 150*self.track + 20*dir + 50
+                x = MID*self.side + 130*self.track + 20*dir + 50
                 pygame.draw.circle(screen, DIR_COLORS[dir], (x, y), 10)
-                if -3 <= x < WIDTH+3:
-                    self.font.render_to(screen, (x-4, y-5), DIR_CHARS[dir])
+                self.font.render_to(screen, (x-4, y-5), DIR_CHARS[dir])
 
 
 class Player:
@@ -117,20 +119,21 @@ class Player:
             self.active_tracks = [False]*3
 
     def draw(self, screen):
-        left = WIDTH//2 * self.side
+        left = MID*self.side
         for i in range(3):
-            y = i*150 + 40
+            x = left + i*130 + 40
             if self.active_tracks[i]:
-                pygame.draw.rect(screen, SELECT_COLORS[i], (left, y, 400, 60))
+                pygame.draw.rect(screen, SELECT_COLORS[i],
+                                 (x, 40, 60, HEIGHT-40))
         for beat in self.beats:
             beat.draw(screen)
-        self.font.render_to(screen, (left + 25, 10),
+        self.font.render_to(screen, (left + 35, 10),
                             'Power: %d' % self.power, ATTRIB_COLORS[0])
         self.font.render_to(screen, (left + 165, 10),
                             'Health: %d' % self.health, ATTRIB_COLORS[1])
-        self.font.render_to(screen, (left + 305, 10),
+        self.font.render_to(screen, (left + 295, 10),
                             'Speed: %d' % self.speed, ATTRIB_COLORS[2])
-        self.font.render_to(screen, (left + 25, 140),
+        self.font.render_to(screen, (left + 105, 140),
                             'Boost: %d' % self.boost_counter)
 
 
@@ -183,18 +186,18 @@ class Game:
         self.player2.draw(screen)
 
         for i in range(3):
-            y = i*150 + 40
-            pygame.draw.line(screen, (0,0,0), (0, y), (WIDTH, y), 2)
-            pygame.draw.line(screen, (0,0,0), (0, y+20), (WIDTH, y+20), 2)
-            pygame.draw.line(screen, (0,0,0), (0, y+40), (WIDTH, y+40), 2)
-            pygame.draw.line(screen, (0,0,0), (0, y+60), (WIDTH, y+60), 2)
+            x = i*130 + 40
+            for j in range(4):
+                xx = x + j*20
+                pygame.draw.line(screen, (0,0,0), (xx, 40), (xx, HEIGHT), 2)
+                pygame.draw.line(screen, (0,0,0), (MID+xx, 40), (MID+xx, HEIGHT), 2)
+            pygame.draw.line(screen, (0,0,0), (x, 400), (x+60, 400), 2)
+            pygame.draw.line(screen, (0,0,0), (x, 420), (x+60, 420), 2)
+            pygame.draw.line(screen, (0,0,0), (MID+x, 400), (MID+x+60, 400), 2)
+            pygame.draw.line(screen, (0,0,0), (MID+x, 420), (MID+x+60, 420), 2)
 
-            pygame.draw.line(screen, (0,0,0), (80, y), (80, y+60), 2)
-            pygame.draw.line(screen, (0,0,0), (60, y), (60, y+60), 2)
-            pygame.draw.line(screen, (0,0,0), (720, y), (WIDTH-80, y+60), 2)
-            pygame.draw.line(screen, (0,0,0), (740, y), (WIDTH-60, y+60), 2)
-
-        pygame.draw.line(screen, (0,0,0), (WIDTH//2, 0), (WIDTH//2, HEIGHT), 2)
+        pygame.draw.line(screen, (0,0,0), (0, 40), (WIDTH, 40), 2)
+        pygame.draw.line(screen, (0,0,0), (MID, 0), (MID, HEIGHT), 3)
 
     def process_events(self):
         for e in pygame.event.get():
