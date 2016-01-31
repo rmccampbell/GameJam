@@ -20,21 +20,59 @@ SIZE = 100
 
 REDDANCE = []
 
+REDATTACK = []
+
+REDIDLE = None
+
+REDNOFIST = None
+
 BLUEDANCE = []
+
+BLUEATTACK = []
+
+BLUEIDLE = None
+
+BLUENOFIST = None
 
 
 def load_images():
     global REDDANCE, BLUEDANCE
     for i in range(1, 9):
         img = pygame.image.load("reddance%d.png" % i).convert_alpha()
-        img.set_colorkey((0, 0, 0))
-        img = pygame.transform.scale(img, (115, 115))
+        img = pygame.transform.scale(img, (128, 128))
         REDDANCE.append(img)
     for i in range(1, 9):
         img = pygame.image.load("bluedance%d.png" % i).convert_alpha()
-        img = pygame.transform.scale(img, (115, 115))
+        img = pygame.transform.scale(img, (128, 128))
         BLUEDANCE.append(img)
 
+    global REDATTACK, BLUEATTACK
+    for i in range(1, 5):
+        img = pygame.image.load("redattack%d.png" % i).convert_alpha()
+        img = pygame.transform.scale(img, (128, 128))
+        REDATTACK.append(img)
+    for i in range(1, 5):
+        img = pygame.image.load("blueattack%d.png" % i).convert_alpha()
+        img = pygame.transform.scale(img, (128, 128))
+        BLUEATTACK.append(img)
+
+    global REDIDLE, BLUEIDLE
+    img = pygame.image.load("redidle.png").convert_alpha()
+    img = pygame.transform.scale(img, (128, 128))
+    REDIDLE = img
+
+    img = pygame.image.load("blueidle.png").convert_alpha()
+    img = pygame.transform.scale(img, (128, 128))
+    BLUEIDLE = img
+
+    global REDNOFIST, BLUENOFIST
+    img = pygame.image.load("redidlenohand.png").convert_alpha()
+    img = pygame.transform.scale(img, (128, 128))
+    REDNOFIST = img
+
+    img = pygame.image.load("blueidlenohand.png").convert_alpha()
+    img = pygame.transform.scale(img, (128, 128))
+    BLUENOFIST = img
 
 class Player:
     def __init__(self):
@@ -79,10 +117,7 @@ class Game:
 
         self.group.add(player1.sprite, player2.sprite)
 
-        if player1.power >= player2.power: 
-            self.players = [player1, player2]
-        else:
-            self.players = [player2, player1]
+        self.players = [player1, player2]
         self.player1, self.player2 = self.players
 
     def run(self):
@@ -129,6 +164,8 @@ class Game:
                         player.speedy += -1
                         player.speedy = max(player.speedy, -1)
                         other.health -= .01
+                        if other.health < 0:
+                            other.health = 0
 
                 if player.y > HEIGHT * 0.75 - SIZE:
                     player.y = HEIGHT * 0.75 - SIZE
