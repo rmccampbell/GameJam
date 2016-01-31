@@ -57,10 +57,10 @@ class Beat:
 
     def update(self):
         self.dist += MUSIC_SPEED
-        if self.dist >= 320 and not self.is_ready:
+        if self.dist >= 310 and not self.is_ready:
             self.is_ready = True
             self.player.ready_beats[self.track] = self
-        elif self.dist >= 340 and self.is_ready:
+        elif self.dist >= 350 and self.is_ready:
             self.is_ready = False
             self.check()
             self.player.ready_beats[self.track] = None
