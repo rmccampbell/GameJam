@@ -210,8 +210,6 @@ class Game:
                 if self.win == -1:
                     if e.key == K_s:
                         self.players[1].health -= .1
-
-
                     if e.key == K_DOWN:
                         self.players[0].health -= .1
             
