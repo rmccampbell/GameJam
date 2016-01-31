@@ -41,6 +41,7 @@ class Player:
         self.x = 0
         self.y = 0
         self.speed = 5
+        self.jumpspeed = 4
         self.health = 1
         self.power = 5
         self.speedx = 0
@@ -119,7 +120,7 @@ class Game:
             other = self.players[1 - player.index]
 
             if not player.speedy == 0:
-                player.y += player.speedy * player.speed*5
+                player.y += player.speedy * player.speed * player.jumpspeed
                 player.speedy += self.gravity
 
                 if player.rect.colliderect(other):
