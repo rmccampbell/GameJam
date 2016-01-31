@@ -243,7 +243,7 @@ class Game:
         else:
             player1.sprite.image = REDDANCE[player1.sprite_num-1]
 
-            if (self.timer % 5 == 0):
+            if (self.timer % 5 == 0 and not self.win == 1):
                 player1.sprite_num += 1
                 if (player1.sprite_num > 8):
                     player1.sprite_num = 1
@@ -262,7 +262,7 @@ class Game:
         else:
             player2.sprite.image = BLUEDANCE[player2.sprite_num-1]
         
-            if (self.timer % 5 == 0):
+            if (self.timer % 5 == 0 and not self.win == 0):
                 player2.sprite_num += 1
                 if (player2.sprite_num > 8):
                     player2.sprite_num = 1
@@ -311,14 +311,14 @@ class Game:
             
         if self.win == -1:
             keys = pygame.key.get_pressed()
-            if keys[pygame.K_w] and player1.grounded:
+            if keys[pygame.K_w] and player1.grounded and not player1.attacking:
                 player1.speedy = -1
                 player1.grounded = False
             if keys[pygame.K_a]:
                 player1.speedx = -1
             if keys[pygame.K_d]:
                 player1.speedx = 1
-            if keys[pygame.K_UP] and player2.grounded:
+            if keys[pygame.K_UP] and player2.grounded and not player2.attacking:
                 player2.speedy = -1
                 player2.grounded = False
             if keys[pygame.K_LEFT]:
