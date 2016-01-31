@@ -97,9 +97,10 @@ class Game:
                 player.speedy += self.gravity
 
                 if player.rect.colliderect(other):
-                    if player.y - other.y < SIZE and abs(player.x - other.x) < SIZE - 10:
+                    if player.y - other.y > -1 * SIZE  and player.y - other.y < 0 and abs(player.x - other.x) < SIZE - 10:
                         player.y = other.y - SIZE
                         player.speedy += -1
+                        player.speedy = max(player.speedy, -1)
                         other.health -= .01
 
                 if player.y > HEIGHT * 0.75 - SIZE:
@@ -142,12 +143,24 @@ class Game:
         pygame.draw.rect(screen, pygame.Color("green"), left_bar)
         pygame.draw.rect(screen, pygame.Color("black"), left_stroke, 2)
 
+        left_label = self.font.render("Red", 1, pygame.Color("red"))
+        left_labelpos = left_label.get_rect()
+        left_labelpos.centerx = 50
+        left_labelpos.centery = left_bar.centery
+        screen.blit(left_label, left_labelpos)
+
         right_width = (math.floor(WIDTH/2) - 50) * self.players[PLAYER2].health
         right_offset = ((math.floor(WIDTH/2) + 40) + ((math.floor(WIDTH/2) - 50) * (1 - self.players[PLAYER2].health)))
         right_bar = pygame.Rect((right_offset, 10), (right_width, 50))
         right_stroke = pygame.Rect(((math.floor(WIDTH/2) + 40), 10), (math.floor(WIDTH/2) - 50, 50))
         pygame.draw.rect(screen, pygame.Color("green"), right_bar)
         pygame.draw.rect(screen, pygame.Color("black"), right_stroke, 2)
+
+        right_label = self.font.render("Blue", 1, pygame.Color("blue"))
+        right_labelpos = right_label.get_rect()
+        right_labelpos.centerx = WIDTH - 60
+        right_labelpos.centery = right_bar.centery
+        screen.blit(right_label, right_labelpos)
 
         # stage
         ground = pygame.Rect((0, HEIGHT*.75), (WIDTH, HEIGHT*.75))
@@ -161,7 +174,7 @@ class Game:
         player1.sprite = pygame.sprite.Sprite()
         player1.sprite.image = pygame.image.load("redidle.png").convert()
         player1.sprite.image.set_colorkey((255, 255, 255))
-        player1.sprite.image = pygame.transform.scale(player1.sprite.image, (100, 100))
+        player1.sprite.image = pygame.transform.scale(player1.sprite.image, (115, 115))
         
         if player1.x > player2.x:
             player1.sprite.image = pygame.transform.flip(player1.sprite.image, True, False)
@@ -172,7 +185,7 @@ class Game:
         player2.sprite = pygame.sprite.Sprite()
         player2.sprite.image = pygame.image.load("blueidle.png").convert()
         player2.sprite.image.set_colorkey((255, 255, 255))
-        player2.sprite.image = pygame.transform.scale(player2.sprite.image, (100, 100))
+        player2.sprite.image = pygame.transform.scale(player2.sprite.image, (115, 115))
         
         if player2.x > player1.x:
             player2.sprite.image = pygame.transform.flip(player2.sprite.image, True, False)
@@ -186,9 +199,9 @@ class Game:
 
         if not self.win == -1:
             if self.win == PLAYER1:
-                win_label = self.font.render("Player 1 Wins!", 1, pygame.Color("black"))
+                win_label = self.font.render("Red Wins!", 1, pygame.Color("black"))
             elif self.win == PLAYER2:
-                win_label = self.font.render("Player 2 Wins!", 1, pygame.Color("black"))
+                win_label = self.font.render("Blue Wins!", 1, pygame.Color("black"))
             else:
                 win_label = self.font.render("It's a Draw!", 1, pygame.Color("black"))
 
@@ -209,9 +222,13 @@ class Game:
 
                 if self.win == -1:
                     if e.key == K_s:
-                        self.players[1].health -= .1
+                        self.players[PLAYER2].health -= .1
+                        if self.players[PLAYER2].health < 0:
+                            self.players[PLAYER2].health = 0
                     if e.key == K_DOWN:
-                        self.players[0].health -= .1
+                        self.players[PLAYER1].health -= .1
+                        if self.players[PLAYER1].health < 0:
+                            self.players[PLAYER1].health = 0
             
         if self.win == -1:
             keys = pygame.key.get_pressed()
