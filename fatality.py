@@ -172,9 +172,9 @@ class Game:
 
             if not other.fist is None:
                 if player.rect.contains(other.fist):
-                    player.health -= 10
-                    other.fist = None
-                    other.attacking = False
+                    player.health -= .1
+                    other.fist.sprite.kill()
+                    other.fist.x += 1000
 
             if not player.speedy == 0:
                 player.y += player.speedy * player.speed * player.jumpspeed
@@ -301,7 +301,7 @@ class Game:
         if player1.x > player2.x:
             player1.sprite.image = pygame.transform.flip(player1.sprite.image, True, False)
 
-        player1.rect = pygame.Rect((player1.x, player1.y), (, SIZE))
+        player1.rect = pygame.Rect((player1.x, player1.y), (SIZE, SIZE))
         player1.sprite.rect = player1.rect
 
         if player2.attacking:
