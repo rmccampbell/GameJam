@@ -84,6 +84,7 @@ class Fist:
         self.sprite_num = 1
         self.lifespan = 120
         self.rect = None
+        self.colliderect = None
         self.sprite = pygame.sprite.Sprite()
 
 class Player:
@@ -168,6 +169,12 @@ class Game:
 
         for player in self.players:
             other = self.players[1 - player.index]
+
+            if not other.fist is None:
+                if player.rect.contains(other.fist):
+                    player.health -= 10
+                    other.fist = None
+                    other.attacking = False
 
             if not player.speedy == 0:
                 player.y += player.speedy * player.speed * player.jumpspeed
@@ -275,6 +282,7 @@ class Game:
                 fist1.sprite.image = pygame.transform.flip(fist1.sprite.image, True, False)
 
             fist1.rect = pygame.Rect((fist1.x, fist1.y), (SIZE, SIZE))
+            fist1.colliderect = pygame.Rect((fist1.x + 60, fist1.y + 44), (50, 44))
             fist1.sprite.rect = fist1.rect
 
             if player1.attack_time - self.timer > 120:
@@ -293,7 +301,7 @@ class Game:
         if player1.x > player2.x:
             player1.sprite.image = pygame.transform.flip(player1.sprite.image, True, False)
 
-        player1.rect = pygame.Rect((player1.x, player1.y), (SIZE, SIZE))
+        player1.rect = pygame.Rect((player1.x, player1.y), (, SIZE))
         player1.sprite.rect = player1.rect
 
         if player2.attacking:
@@ -320,6 +328,7 @@ class Game:
                 fist2.sprite.image = pygame.transform.flip(fist2.sprite.image, True, False)
 
             fist2.rect = pygame.Rect((fist2.x, fist2.y), (SIZE, SIZE))
+            fist2.colliderect = pygame.Rect((fist2.x + 60, fist2.y + 44), (50, 44))
             fist2.sprite.rect = fist2.rect
 
             if player2.attack_time - self.timer > 120:
