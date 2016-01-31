@@ -18,15 +18,18 @@ PLAYER2 = 1
 
 SIZE = 100
 
-REDIDLE = None
+REDDANCE = []
 
 BLUEDANCE = []
 
 
 def load_images():
-    global REDIDLE, BLUEDANCE
-    REDIDLE = pygame.image.load("redidle.png").convert_alpha()
-    REDIDLE = pygame.transform.scale(REDIDLE, (115, 115))
+    global REDDANCE, BLUEDANCE
+    for i in range(1, 9):
+        img = pygame.image.load("reddance%d.png" % i).convert_alpha()
+        img.set_colorkey((0, 0, 0))
+        img = pygame.transform.scale(img, (115, 115))
+        REDDANCE.append(img)
     for i in range(1, 9):
         img = pygame.image.load("bluedance%d.png" % i).convert_alpha()
         img.set_colorkey((0, 0, 0))
@@ -193,7 +196,12 @@ class Game:
         player1 = self.players[PLAYER1]
         player2 = self.players[PLAYER2]
 
-        player1.sprite.image = REDIDLE
+        player1.sprite.image = REDDANCE[player1.sprite_num-1]
+
+        if (self.timer % 5 == 0):
+            player1.sprite_num += 1
+            if (player1.sprite_num > 8):
+                player1.sprite_num = 1
 
         if player1.x > player2.x:
             player1.sprite.image = pygame.transform.flip(player1.sprite.image, True, False)
