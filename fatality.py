@@ -31,7 +31,7 @@ class Player:
         self.rect = None
         self.sprite = None
         self.index = None
-        self.sprite_num = 1
+        self.sprite_num = 7
 
 class Game:
     def __init__(self):
@@ -43,6 +43,7 @@ class Game:
         self.running = False
         self.win = -1
         self.gravity = .05
+
         self.group = pygame.sprite.Group()
 
         player1 = Player()
@@ -128,6 +129,7 @@ class Game:
 
     def draw(self, screen):
         screen.fill(BGCOLOR)
+        self.group.empty()
 
         # timer
         clock = str(math.ceil(self.timer/60))
@@ -186,7 +188,7 @@ class Game:
         player2.sprite = pygame.sprite.Sprite()
         player2.sprite.image = pygame.image.load("bluedance" + str(player2.sprite_num) + ".png").convert()
         
-        if (self.timer % 50 == 0):
+        if (self.timer % 5 == 0):
             player2.sprite_num += 1
             if (player2.sprite_num > 8):
                 player2.sprite_num = 1
