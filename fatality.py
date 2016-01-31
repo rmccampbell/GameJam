@@ -140,7 +140,7 @@ class Game:
         self.group.add(player1.sprite, player2.sprite)
 
     def set_player_attr(self, player, attrs):
-        player.power = BASEPOWER * (attrs[0] / 300)
+        player.power = BASEPOWER * pow((attrs[0] / 300), 2)
         player.max_health += attrs[1]
         player.health = player.max_health
         player.speed = BASESPEED * (attrs[2] / 300)
