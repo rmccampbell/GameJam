@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+from __future__ import division
 import sys, os, pygame, pygame.freetype, random, math
 from pygame.locals import *
+
 
 FPS = 60
 
@@ -193,7 +195,7 @@ class Game:
                     if player.health < 0:
                             player.health = 0
                     other.fist.sprite.kill()
-                    other.fist.x += 1000
+                    other.fist.x += 1000 * other.fist.dir
 
             if not player.speedy == 0:
                 player.y += player.speedy * player.jumpspeed
@@ -298,7 +300,7 @@ class Game:
                 self.group.add(fist1.sprite)
                 fist1.x = player1.x
                 fist1.y = player1.y
-                fist1.lifespan = 120 * (1 / (player2.speed / 5))
+                fist1.lifespan = 60 * (1 / (player1.speed / BASESPEED))
                 fist1.speed = player1.speed * 1.5
                 if player1.x - player2.x > 0:
                     fist1.dir = -1
@@ -349,7 +351,7 @@ class Game:
                 self.group.add(fist2.sprite)
                 fist2.x = player2.x
                 fist2.y = player2.y
-                fist2.lifespan = 120 * (1 / (player2.speed / 5))
+                fist2.lifespan = 60 * (1 / (player2.speed / BASESPEED))
                 fist2.speed = player2.speed * 1.5
                 if player1.x - player2.x > 0:
                     fist2.dir = -1
@@ -446,7 +448,7 @@ class Game:
         self.running = False
 
 if __name__ == '__main__':
-    player1_attrs = (500, 200, 150)
+    player1_attrs = (800, 100, 100)
     player2_attrs = (300, 350, 300)
     game = Game(player1_attrs, player2_attrs)
     game.run()
