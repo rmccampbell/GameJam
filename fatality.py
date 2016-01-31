@@ -74,6 +74,18 @@ def load_images():
     img = pygame.transform.scale(img, (128, 128))
     BLUENOFIST = img
 
+class Fist:
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+        self.dir = 1
+        self.speed = 5
+        self.power = 5
+        self.sprite_num = 1
+        self.lifespan = 120
+        self.rect = None
+        self.sprite = pygame.sprite.Sprite()
+
 class Player:
     def __init__(self):
         self.x = 0
@@ -91,6 +103,7 @@ class Player:
         self.sprite = pygame.sprite.Sprite()
         self.index = None
         self.sprite_num = 7
+        self.fist = None
 
 class Game:
     def __init__(self):
@@ -235,11 +248,40 @@ class Game:
         player1 = self.players[PLAYER1]
         player2 = self.players[PLAYER2]
 
+        fist1 = player1.fist
+        fist2 = player2.fist
+
         if player1.attacking:
             player1.sprite.image = REDNOFIST
 
+            if fist1 is None:
+                player1.fist = Fist()
+                fist1 = player1.fist
+                self.group.add(fist1.sprite)
+                fist1.x = player1.x
+                fist1.y = player1.y
+                if player1.x - player2.x > 0:
+                    fist1.dir = -1
+
+            fist1.x += fist1.speed * fist1.dir 
+
+            fist1.sprite.image = REDATTACK[fist1.sprite_num-1]
+            if (self.timer % 5 == 0):
+                fist1.sprite_num += 1
+                if (fist1.sprite_num > 4):
+                    fist1.sprite_num = 1
+
+            if fist1.dir < 0:
+                fist1.sprite.image = pygame.transform.flip(fist1.sprite.image, True, False)
+
+            fist1.rect = pygame.Rect((fist1.x, fist1.y), (SIZE, SIZE))
+            fist1.sprite.rect = fist1.rect
+
             if player1.attack_time - self.timer > 120:
                 player1.attacking = False 
+                fist1.sprite.kill() 
+                player1.fist = None
+
         else:
             player1.sprite.image = REDDANCE[player1.sprite_num-1]
 
@@ -255,10 +297,36 @@ class Game:
         player1.sprite.rect = player1.rect
 
         if player2.attacking:
-            player2.sprite.image = BLUENOFIST
+            player2.sprite.image = BLUENOFIST 
+
+            if fist2 is None:
+                player2.fist = Fist()
+                fist2 = player2.fist
+                self.group.add(fist2.sprite)
+                fist2.x = player2.x
+                fist2.y = player2.y
+                if player1.x - player2.x > 0:
+                    fist2.dir = -1
+
+            fist2.x -= fist2.speed * fist2.dir 
+
+            fist2.sprite.image = BLUEATTACK[fist2.sprite_num-1]
+            if (self.timer % 5 == 0):
+                fist2.sprite_num += 1
+                if (fist2.sprite_num > 4):
+                    fist2.sprite_num = 1
+
+            if fist2.dir > 0:
+                fist2.sprite.image = pygame.transform.flip(fist2.sprite.image, True, False)
+
+            fist2.rect = pygame.Rect((fist2.x, fist2.y), (SIZE, SIZE))
+            fist2.sprite.rect = fist2.rect
 
             if player2.attack_time - self.timer > 120:
-                player2.attacking = False 
+                player2.attacking = False
+                fist2.sprite.kill()
+                player2.fist = None
+
         else:
             player2.sprite.image = BLUEDANCE[player2.sprite_num-1]
         
@@ -288,7 +356,6 @@ class Game:
             win_labelpos.centery = screen.get_rect().centery
             screen.blit(win_label, win_labelpos)
 
-
     def process_events(self):
         player1 = self.players[PLAYER1]
         player2 = self.players[PLAYER2]
@@ -302,10 +369,10 @@ class Game:
                     self.quit()
 
                 if self.win == -1:
-                    if e.key == K_s:
+                    if e.key == K_s and not player1.attacking:
                         player1.attacking = True
                         player1.attack_time = self.timer
-                    if e.key == K_DOWN:
+                    if e.key == K_DOWN and not player2.attacking:
                         player2.attacking = True
                         player2.attack_time = self.timer
             
