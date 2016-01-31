@@ -16,14 +16,15 @@ RIGHT = 2
 DIR_CHARS = [['Q', 'A', 'Z'], ['O', 'K', 'M']]
 DIR_COLORS = [(0, 255, 0), (255, 0, 255), (255, 127, 0)]
 
-ATTRIB_COLORS = [(180, 0, 0), (100, 100, 255), (223, 223, 0)]
-SELECT_COLORS = [(255, 200, 200, 150), (220, 220, 255, 150), (255, 255, 100, 150)]
+ATTRIB_COLORS = [(180, 0, 0), (70, 70, 255), (255, 255, 0)]
+SELECT_COLORS = [(255, 180, 180, 150), (220, 220, 255, 150), (255, 255, 100, 150)]
 
 MUSIC_SPEED = 2
 MUSIC_RATE = 120
 POINT_RATE = 30
 
 
+BACKGROUND = None
 POWER_IMG = None
 HEALTH_IMG = None
 SPEED_IMG = None
@@ -35,7 +36,9 @@ BLUEDANCE = []
 SELECT_RECTS = []
 
 def load_images():
+    global BACKGROUND
     global POWER_IMG, HEALTH_IMG, SPEED_IMG, UP_IMG, DOWN_IMG, LEFT_IMG
+    BACKGROUND = pygame.image.load("stage2.png").convert()
     POWER_IMG = pygame.image.load("power.png").convert_alpha()
     HEALTH_IMG = pygame.image.load("health.png").convert_alpha()
     SPEED_IMG = pygame.image.load("speed.png").convert_alpha()
@@ -183,12 +186,16 @@ class Game:
         self.running = True
         clock = pygame.time.Clock()
         try:
+            frames = 0
             while self.running:
+                if frames >= 14490:
+                    break
                 self.draw(self.screen)
                 pygame.display.flip()
                 self.process_events()
                 self.update()
                 clock.tick(FPS)
+                frames += 1
         finally:
             pygame.quit()
 
@@ -212,7 +219,8 @@ class Game:
                                   4)
 
     def draw(self, screen):
-        screen.fill(BGCOLOR)
+        #screen.fill(BGCOLOR)
+        screen.blit(BACKGROUND, (-50, -25))
 
         # draw background stuff
         screen.blit(REDDANCE[self.anim_timer*2//15], (136, 222))
