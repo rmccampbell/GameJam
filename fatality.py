@@ -112,7 +112,7 @@ class Game:
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption('GameJam')
         self.font = pygame.font.SysFont('Arial', 40)
-        self.timer = 60*60
+        self.timer = 99*60
         self.running = False
         self.win = -1
         self.gravity = .05
