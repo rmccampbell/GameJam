@@ -20,21 +20,59 @@ SIZE = 100
 
 REDDANCE = []
 
+REDATTACK = []
+
+REDIDLE = None
+
+REDNOFIST = None
+
 BLUEDANCE = []
+
+BLUEATTACK = []
+
+BLUEIDLE = None
+
+BLUENOFIST = None
 
 
 def load_images():
     global REDDANCE, BLUEDANCE
     for i in range(1, 9):
         img = pygame.image.load("reddance%d.png" % i).convert_alpha()
-        img.set_colorkey((0, 0, 0))
-        img = pygame.transform.scale(img, (115, 115))
+        img = pygame.transform.scale(img, (128, 128))
         REDDANCE.append(img)
     for i in range(1, 9):
         img = pygame.image.load("bluedance%d.png" % i).convert_alpha()
-        img = pygame.transform.scale(img, (115, 115))
+        img = pygame.transform.scale(img, (128, 128))
         BLUEDANCE.append(img)
 
+    global REDATTACK, BLUEATTACK
+    for i in range(1, 5):
+        img = pygame.image.load("redattack%d.png" % i).convert_alpha()
+        img = pygame.transform.scale(img, (128, 128))
+        REDATTACK.append(img)
+    for i in range(1, 5):
+        img = pygame.image.load("blueattack%d.png" % i).convert_alpha()
+        img = pygame.transform.scale(img, (128, 128))
+        BLUEATTACK.append(img)
+
+    global REDIDLE, BLUEIDLE
+    img = pygame.image.load("redidle.png").convert_alpha()
+    img = pygame.transform.scale(img, (128, 128))
+    REDIDLE = img
+
+    img = pygame.image.load("blueidle.png").convert_alpha()
+    img = pygame.transform.scale(img, (128, 128))
+    BLUEIDLE = img
+
+    global REDNOFIST, BLUENOFIST
+    img = pygame.image.load("redidlenohand.png").convert_alpha()
+    img = pygame.transform.scale(img, (128, 128))
+    REDNOFIST = img
+
+    img = pygame.image.load("blueidlenohand.png").convert_alpha()
+    img = pygame.transform.scale(img, (128, 128))
+    BLUENOFIST = img
 
 class Player:
     def __init__(self):
@@ -47,6 +85,8 @@ class Player:
         self.speedx = 0
         self.speedy = 0
         self.grounded = True
+        self.attacking = False
+        self.attack_time = 0
         self.rect = None
         self.sprite = pygame.sprite.Sprite()
         self.index = None
@@ -124,6 +164,8 @@ class Game:
                         player.speedy += -1
                         player.speedy = max(player.speedy, -1)
                         other.health -= .01
+                        if other.health < 0:
+                            other.health = 0
 
                 if player.y > HEIGHT * 0.75 - SIZE:
                     player.y = HEIGHT * 0.75 - SIZE
@@ -191,12 +233,18 @@ class Game:
         player1 = self.players[PLAYER1]
         player2 = self.players[PLAYER2]
 
-        player1.sprite.image = REDDANCE[player1.sprite_num-1]
+        if player1.attacking:
+            player1.sprite.image = REDNOFIST
 
-        if (self.timer % 5 == 0):
-            player1.sprite_num += 1
-            if (player1.sprite_num > 8):
-                player1.sprite_num = 1
+            if player1.attack_time - self.timer > 120:
+                player1.attacking = False 
+        else:
+            player1.sprite.image = REDDANCE[player1.sprite_num-1]
+
+            if (self.timer % 5 == 0 and not self.win == 1):
+                player1.sprite_num += 1
+                if (player1.sprite_num > 8):
+                    player1.sprite_num = 1
 
         if player1.x > player2.x:
             player1.sprite.image = pygame.transform.flip(player1.sprite.image, True, False)
@@ -204,12 +252,18 @@ class Game:
         player1.rect = pygame.Rect((player1.x, player1.y), (SIZE, SIZE))
         player1.sprite.rect = player1.rect
 
-        player2.sprite.image = BLUEDANCE[player2.sprite_num-1]
+        if player2.attacking:
+            player2.sprite.image = BLUENOFIST
+
+            if player2.attack_time - self.timer > 120:
+                player2.attacking = False 
+        else:
+            player2.sprite.image = BLUEDANCE[player2.sprite_num-1]
         
-        if (self.timer % 5 == 0):
-            player2.sprite_num += 1
-            if (player2.sprite_num > 8):
-                player2.sprite_num = 1
+            if (self.timer % 5 == 0 and not self.win == 0):
+                player2.sprite_num += 1
+                if (player2.sprite_num > 8):
+                    player2.sprite_num = 1
 
         if player2.x > player1.x:
             player2.sprite.image = pygame.transform.flip(player2.sprite.image, True, False)
@@ -234,6 +288,9 @@ class Game:
 
 
     def process_events(self):
+        player1 = self.players[PLAYER1]
+        player2 = self.players[PLAYER2]
+
         for e in pygame.event.get():
             if e.type == QUIT:
                 self.quit()
@@ -244,30 +301,28 @@ class Game:
 
                 if self.win == -1:
                     if e.key == K_s:
-                        self.players[PLAYER2].health -= .1
-                        if self.players[PLAYER2].health < 0:
-                            self.players[PLAYER2].health = 0
+                        player1.attacking = True
+                        player1.attack_time = self.timer
                     if e.key == K_DOWN:
-                        self.players[PLAYER1].health -= .1
-                        if self.players[PLAYER1].health < 0:
-                            self.players[PLAYER1].health = 0
+                        player2.attacking = True
+                        player2.attack_time = self.timer
             
         if self.win == -1:
             keys = pygame.key.get_pressed()
-            if keys[pygame.K_w] and self.players[PLAYER1].grounded:
-                self.players[PLAYER1].speedy = -1
-                self.players[PLAYER1].grounded = False
+            if keys[pygame.K_w] and player1.grounded and not player1.attacking:
+                player1.speedy = -1
+                player1.grounded = False
             if keys[pygame.K_a]:
-                self.players[PLAYER1].speedx = -1
+                player1.speedx = -1
             if keys[pygame.K_d]:
-                self.players[PLAYER1].speedx = 1
-            if keys[pygame.K_UP] and self.players[PLAYER2].grounded:
-                self.players[PLAYER2].speedy = -1
-                self.players[PLAYER2].grounded = False
+                player1.speedx = 1
+            if keys[pygame.K_UP] and player2.grounded and not player2.attacking:
+                player2.speedy = -1
+                player2.grounded = False
             if keys[pygame.K_LEFT]:
-                self.players[PLAYER2].speedx = -1
+                player2.speedx = -1
             if keys[pygame.K_RIGHT]:
-                self.players[PLAYER2].speedx = 1
+                player2.speedx = 1
 
     def quit(self):
         self.running = False
