@@ -594,7 +594,7 @@ class Beat:
             if self.dirs[dir]:
                 y = 150*self.track + 20*dir + 50
                 pygame.draw.circle(screen, DIR_COLORS[dir], (x, y), 10)
-                if -3 <= x < WIDTH+3:
+                if 5 <= x < WIDTH+3:
                     char = DIR_CHARS[self.side][dir]
                     self.font.render_to(screen, (x-5, y-5), char, size=18)
 
